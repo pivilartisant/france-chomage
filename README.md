@@ -1,16 +1,59 @@
 # 🇫🇷 France Chômage Bot
 
-> *"J'ai la flemme de regarder offres d'emplois, puis honnêtemenet j'ai pas trop le temps"*
+Bot Telegram automatisé pour scraper et publier les offres d'emploi en communication et design.
 
-Ouvrir Indeed tous les matins ça me déprime. Il scrape les trucs automatiquement et me balance ça sur Telegram, comme ça si mon dealer me répond pas, au moins j'ai un truc à faire.
+## 📁 Structure du projet
 
-## ⚡ Ce que ça fait
+```
+france-chomage/
+├── france_chomage/           # Package principal
+│   ├── config.py            # Configuration centralisée
+│   ├── scheduler.py         # Scheduler principal
+│   ├── cli.py               # Interface CLI
+│   ├── models/job.py        # Modèle Job avec validation
+│   ├── scraping/            # Scrapers (communication, design)
+│   └── telegram/bot.py      # Bot Telegram
+├── requirements.txt
+└── .env                     # Configuration
+```
 
-- Récupère les offres de comm sur Indeed/LinkedIn (automatiquement, évidemment)
-- Récupère aussi les offres de design/graphisme (topic séparé)
-- Les balance sur Telegram dans les bons topics (pas besoin d'aller les chercher)
-- 4 fois par jour au total (comm à 9h/17h, design à 10h/18h)
-- En français (j'ai pas la force de traduire)
+## ⚡ Utilisation
 
-Voilà. C'est tout. Pas de AI révolutionnaire, juste un truc qui marche.
+```bash
+# Scraping
+python -m france_chomage scrape communication
+python -m france_chomage scrape design
 
+# Workflow complet (scrape + envoi)
+python -m france_chomage workflow communication
+python -m france_chomage workflow design
+
+# Scheduler automatique
+python -m france_chomage scheduler
+
+# Informations
+python -m france_chomage info
+```
+
+## ⚙️ Configuration (.env)
+
+```env
+# Telegram (requis)
+TELEGRAM_BOT_TOKEN=your_token_from_botfather
+TELEGRAM_GROUP_ID=your_group_id
+
+# Scraping (optionnel)
+RESULTS_WANTED=20
+LOCATION=Paris
+SKIP_INIT_JOB=0
+```
+
+## 🐳 Docker
+
+```bash
+# Build image
+docker build -t france-chomage-bot .
+
+# Run with environment file
+docker run --env-file .env france-chomage-bot
+```

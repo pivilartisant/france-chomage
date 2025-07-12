@@ -6,14 +6,11 @@ WORKDIR /app
 # Force Python to show logs immediately
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies needed for jobspy + stealth browsing
+# Install system dependencies needed for jobspy
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
-    wget \
-    gnupg \
-    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching
@@ -26,8 +23,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application code
 COPY . .
 
-# Create directory for logs
-RUN mkdir -p /app/logs
-
-# Default command (can be overridden)
-CMD ["python", "-u", "scheduler.py"]
+# Default command - nouvelle architecture v2.0
+CMD ["python", "-m", "france_chomage", "scheduler"]
