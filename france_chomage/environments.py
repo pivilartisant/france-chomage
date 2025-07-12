@@ -40,6 +40,15 @@ def detect_environment() -> Environment:
 
 def get_sites_for_environment() -> Tuple[str, ...]:
     """Retourne les sites à utiliser selon l'environnement"""
+    # Import ici pour éviter les imports circulaires
+    try:
+        from france_chomage.config import settings
+        # Force LinkedIn only mode if configured
+        if getattr(settings, 'force_docker_mode', False):
+            return SiteStrategy.DOCKER.value
+    except ImportError:
+        pass
+    
     env = detect_environment()
     
     if env == Environment.DOCKER:

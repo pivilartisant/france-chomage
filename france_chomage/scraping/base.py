@@ -42,47 +42,116 @@ class ScraperBase(ABC):
     async def _scrape_with_retry(self) -> Optional[List[Job]]:
         """Scrape avec logique de retry"""
         sites = get_sites_for_environment()
-        print(f"🌐 Sites: {', '.join(sites)} ({'Docker' if is_docker() else 'Local'})")
+        env_type = 'Docker' if is_docker() else 'Local'
+        print(f"🌐 Sites: {', '.join(sites)} ({env_type})")
+        
+        if 'indeed' in sites:
+            print("⚠️ Indeed inclus - Risque de blocage 403 élevé")
+        if env_type == 'Local' and len(sites) > 1:
+            print("🏠 Mode Local détecté - Indeed + LinkedIn (plus de risques)")
+        elif env_type == 'Docker':
+            print("🐳 Mode Docker détecté - LinkedIn uniquement (plus stable)")
         
         for attempt in range(1, settings.max_retries + 1):
             try:
                 print(f"🔄 Tentative {attempt}/{settings.max_retries}")
                 
-                # Délai aléatoire anti-détection
-                delay = random.uniform(settings.scrape_delay_min, settings.scrape_delay_max)
-                print(f"⏳ Attente {delay:.1f}s (anti-détection)")
+                # Délai aléatoire anti-détection (plus long pour Indeed)
+                if 'indeed' in sites and attempt > 1:
+                    # Délais plus longs après un échec avec Indeed
+                    delay = random.uniform(5.0, 15.0)
+                    print(f"⏳ Délai anti-Indeed: {delay:.1f}s")
+                else:
+                    delay = random.uniform(settings.scrape_delay_min, settings.scrape_delay_max)
+                    print(f"⏳ Attente standard: {delay:.1f}s")
                 await asyncio.sleep(delay)
                 
-                # Paramètres de scraping
+                # Paramètres de scraping avec stratégies anti-détection
                 scrape_params = {
                     'site_name': list(sites),
                     'search_term': self.search_terms,
                     'location': settings.location,
-                    'results_wanted': settings.results_wanted,
+                    'results_wanted': min(settings.results_wanted, 10) if 'indeed' in sites else settings.results_wanted,
                     'country_indeed': settings.country,
+
                 }
                 
+                # Réduction du nombre de résultats pour Indeed
+                if 'indeed' in sites:
+                    scrape_params['results_wanted'] = min(scrape_params['results_wanted'], settings.indeed_max_results)
+                    print(f"🎯 Limitation Indeed: max {settings.indeed_max_results} résultats pour éviter la détection")
+                
                 print(f"📍 Recherche: '{self.search_terms}' à {settings.location} ({settings.results_wanted} résultats)")
+                print(f"🌐 Sites ciblés: {', '.join(scrape_params['site_name'])}")
+                print(f"🔧 Paramètres complets: {scrape_params}")
                 
                 # Scraping synchrone (jobspy n'est pas async)
+                print("🚀 Lancement de jobspy...")
                 df = await asyncio.get_event_loop().run_in_executor(
                     None, lambda: scrape_jobs(**scrape_params)
                 )
+                print("📊 Réponse jobspy reçue")
                 
                 if df is not None and len(df) > 0:
+                    print(f"📄 DataFrame reçu: {len(df)} lignes, colonnes: {list(df.columns)}")
                     jobs = self._dataframe_to_jobs(df)
-                    print(f"🎉 Succès! {len(jobs)} offres récupérées")
+                    print(f"🎉 Succès! {len(jobs)} offres récupérées après parsing")
                     return jobs
                 else:
-                    print(f"⚠️ Aucune offre trouvée (tentative {attempt})")
+                    if df is None:
+                        print(f"⚠️ DataFrame vide (None) - tentative {attempt}")
+                    else:
+                        print(f"⚠️ DataFrame sans données ({len(df)} lignes) - tentative {attempt}")
                     
             except Exception as exc:
-                print(f"❌ Erreur tentative {attempt}: {str(exc)}")
+                error_msg = str(exc)
+                print(f"❌ Erreur tentative {attempt}: {error_msg}")
+                
+                # Détection des erreurs spécifiques
+                if "403" in error_msg:
+                    print("🚫 Erreur 403 détectée - Blocage anti-bot probable")
+                    
+                    # Fallback automatique vers LinkedIn uniquement
+                    if 'indeed' in sites and 'linkedin' in sites and len(sites) > 1:
+                        print("🔄 Fallback automatique: tentative avec LinkedIn uniquement...")
+                        linkedin_only_params = scrape_params.copy()
+                        linkedin_only_params['site_name'] = ['linkedin']
+                        linkedin_only_params['results_wanted'] = settings.results_wanted  # Pas de limite pour LinkedIn
+                        
+                        try:
+                            print("🔗 Tentative LinkedIn seul...")
+                            df_linkedin = await asyncio.get_event_loop().run_in_executor(
+                                None, lambda: scrape_jobs(**linkedin_only_params)
+                            )
+                            
+                            if df_linkedin is not None and len(df_linkedin) > 0:
+                                print(f"✅ Succès LinkedIn! {len(df_linkedin)} offres trouvées")
+                                jobs = self._dataframe_to_jobs(df_linkedin)
+                                return jobs
+                            else:
+                                print("⚠️ LinkedIn n'a pas retourné de résultats")
+                        except Exception as linkedin_exc:
+                            print(f"❌ Échec LinkedIn aussi: {linkedin_exc}")
+                    
+                    print("💡 Suggestions pour éviter les 403:")
+                    print("   • Indeed bloque souvent les scrapers")
+                    print("   • Utilisez DOCKER=1 pour LinkedIn uniquement")
+                    print("   • Réduisez RESULTS_WANTED à 5-10")
+                    print("   • Augmentez les délais entre scraping")
+                elif "timeout" in error_msg.lower():
+                    print("⏰ Timeout détecté - Connexion lente ou serveur surchargé")
+                elif "connection" in error_msg.lower():
+                    print("🌐 Problème de connexion réseau")
+                
+                print(f"🔍 Type d'erreur: {type(exc).__name__}")
+                print(f"📝 Message complet: {repr(exc)}")
                 
                 if attempt < settings.max_retries:
                     wait_time = settings.retry_delay_base * attempt
                     print(f"🔄 Attente {wait_time}s avant nouvelle tentative...")
                     await asyncio.sleep(wait_time)
+                else:
+                    print("💥 Toutes les tentatives épuisées")
         
         print("💥 Toutes les tentatives ont échoué")
         return None
