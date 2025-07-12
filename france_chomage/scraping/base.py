@@ -7,14 +7,11 @@ import random
 from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import List, Optional
-import structlog
 
 from jobspy import scrape_jobs
 from france_chomage.config import settings
 from france_chomage.environments import get_sites_for_environment, is_docker
 from france_chomage.models import Job
-
-logger = structlog.get_logger()
 
 class ScraperBase(ABC):
     """Classe de base pour tous les scrapers"""
@@ -25,19 +22,19 @@ class ScraperBase(ABC):
     job_type: str  # Pour les hashtags
     
     def __init__(self):
-        self.logger = logger.bind(scraper=self.__class__.__name__)
+        pass
     
     async def scrape(self) -> List[Job]:
         """Point d'entrée principal pour scraper"""
-        self.logger.info("Début du scraping", job_type=self.job_type)
+        print(f"🔍 Début du scraping {self.job_type}")
         
         jobs = await self._scrape_with_retry()
         
         if jobs:
-            self.logger.info("Scraping terminé", jobs_count=len(jobs))
+            print(f"✅ Scraping terminé - {len(jobs)} offres trouvées")
             self._save_jobs(jobs)
         else:
-            self.logger.warning("Aucune offre trouvée")
+            print("⚠️ Aucune offre trouvée")
             self._save_empty_file()
             
         return jobs or []
@@ -45,15 +42,15 @@ class ScraperBase(ABC):
     async def _scrape_with_retry(self) -> Optional[List[Job]]:
         """Scrape avec logique de retry"""
         sites = get_sites_for_environment()
-        self.logger.info("Stratégie de scraping", sites=sites, is_docker=is_docker())
+        print(f"🌐 Sites: {', '.join(sites)} ({'Docker' if is_docker() else 'Local'})")
         
         for attempt in range(1, settings.max_retries + 1):
             try:
-                self.logger.info("Tentative de scraping", attempt=attempt)
+                print(f"🔄 Tentative {attempt}/{settings.max_retries}")
                 
                 # Délai aléatoire anti-détection
                 delay = random.uniform(settings.scrape_delay_min, settings.scrape_delay_max)
-                self.logger.debug("Attente anti-détection", delay=delay)
+                print(f"⏳ Attente {delay:.1f}s (anti-détection)")
                 await asyncio.sleep(delay)
                 
                 # Paramètres de scraping
@@ -65,7 +62,7 @@ class ScraperBase(ABC):
                     'country_indeed': settings.country,
                 }
                 
-                self.logger.debug("Paramètres de scraping", **scrape_params)
+                print(f"📍 Recherche: '{self.search_terms}' à {settings.location} ({settings.results_wanted} résultats)")
                 
                 # Scraping synchrone (jobspy n'est pas async)
                 df = await asyncio.get_event_loop().run_in_executor(
@@ -74,25 +71,20 @@ class ScraperBase(ABC):
                 
                 if df is not None and len(df) > 0:
                     jobs = self._dataframe_to_jobs(df)
-                    self.logger.info("Scraping réussi", jobs_found=len(jobs))
+                    print(f"🎉 Succès! {len(jobs)} offres récupérées")
                     return jobs
                 else:
-                    self.logger.warning("Aucune offre trouvée", attempt=attempt)
+                    print(f"⚠️ Aucune offre trouvée (tentative {attempt})")
                     
             except Exception as exc:
-                self.logger.error(
-                    "Échec de la tentative",
-                    attempt=attempt,
-                    error=str(exc),
-                    exc_info=True
-                )
+                print(f"❌ Erreur tentative {attempt}: {str(exc)}")
                 
                 if attempt < settings.max_retries:
                     wait_time = settings.retry_delay_base * attempt
-                    self.logger.info("Attente avant nouvelle tentative", wait_time=wait_time)
+                    print(f"🔄 Attente {wait_time}s avant nouvelle tentative...")
                     await asyncio.sleep(wait_time)
         
-        self.logger.error("Toutes les tentatives ont échoué")
+        print("💥 Toutes les tentatives ont échoué")
         return None
     
     def _dataframe_to_jobs(self, df) -> List[Job]:
@@ -116,7 +108,7 @@ class ScraperBase(ABC):
                 job = Job(**job_data)
                 jobs.append(job)
             except Exception as exc:
-                self.logger.warning("Erreur parsing job", error=str(exc), job_data=list(job_data.keys()))
+                print(f"⚠️ Erreur parsing job: {str(exc)}")
                 continue
         
         return jobs
@@ -130,7 +122,7 @@ class ScraperBase(ABC):
         with output_path.open('w', encoding='utf-8') as f:
             json.dump(jobs_data, f, ensure_ascii=False, indent=2)
         
-        self.logger.info("Jobs sauvegardés", file=str(output_path), count=len(jobs))
+        print(f"💾 {len(jobs)} jobs sauvegardés dans {output_path}")
     
     def _save_empty_file(self) -> None:
         """Sauvegarde un fichier vide en cas d'échec"""
@@ -139,7 +131,7 @@ class ScraperBase(ABC):
         with output_path.open('w', encoding='utf-8') as f:
             json.dump([], f)
         
-        self.logger.info("Fichier vide créé", file=str(output_path))
+        print(f"📄 Fichier vide créé: {output_path}")
     
     @classmethod
     def load_jobs(cls) -> List[Job]:
@@ -149,7 +141,7 @@ class ScraperBase(ABC):
         file_path = Path(f"jobs_{filename_prefix}.json")
         
         if not file_path.exists():
-            logger.warning("Fichier de jobs introuvable", file=str(file_path))
+            print(f"⚠️ Fichier de jobs introuvable: {file_path}")
             return []
         
         try:
@@ -157,9 +149,9 @@ class ScraperBase(ABC):
                 data = json.load(f)
             
             jobs = [Job(**job_data) for job_data in data]
-            logger.info("Jobs chargés", file=str(file_path), count=len(jobs))
+            print(f"📂 {len(jobs)} jobs chargés depuis {file_path}")
             return jobs
             
         except Exception as exc:
-            logger.error("Erreur chargement jobs", file=str(file_path), error=str(exc))
+            print(f"❌ Erreur chargement jobs de {file_path}: {str(exc)}")
             return []

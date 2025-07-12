@@ -1,7 +1,6 @@
 """
 Modèle de données pour les offres d'emploi
 """
-from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 

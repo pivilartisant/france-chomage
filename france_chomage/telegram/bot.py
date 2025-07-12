@@ -3,13 +3,10 @@ Bot Telegram générique et réutilisable
 """
 import asyncio
 from typing import List
-import structlog
 
 from telegram import Bot
 from france_chomage.config import settings
 from france_chomage.models import Job
-
-logger = structlog.get_logger()
 
 class TelegramJobBot:
     """Bot Telegram générique pour poster des offres d'emploi"""
@@ -17,7 +14,6 @@ class TelegramJobBot:
     def __init__(self):
         self.bot = Bot(token=settings.telegram_bot_token)
         self.group_id = settings.telegram_group_id
-        self.logger = logger.bind(component="telegram_bot")
     
     def escape_markdown(self, text: str) -> str:
         """Échappe les caractères spéciaux MarkdownV2"""
@@ -84,15 +80,11 @@ class TelegramJobBot:
                 disable_web_page_preview=False
             )
             
-            self.logger.info("Offre envoyée", title=job.title, topic_id=topic_id)
+            print(f"✅ Offre envoyée: {job.title}")
             return True
             
         except Exception as exc:
-            self.logger.warning(
-                "Échec envoi avec Markdown, tentative sans formatage",
-                title=job.title,
-                error=str(exc)
-            )
+            print(f"⚠️ Échec Markdown, essai sans formatage: {job.title}")
             
             try:
                 # Fallback sans formatage
@@ -106,28 +98,24 @@ class TelegramJobBot:
                     disable_web_page_preview=False
                 )
                 
-                self.logger.info("Offre envoyée (sans formatage)", title=job.title)
+                print(f"✅ Offre envoyée (texte brut): {job.title}")
                 return True
                 
             except Exception as exc2:
-                self.logger.error(
-                    "Échec total envoi offre",
-                    title=job.title,
-                    error=str(exc2),
-                    exc_info=True
-                )
+                print(f"❌ Échec total envoi: {job.title} - {str(exc2)}")
                 return False
     
     async def send_jobs(self, jobs: List[Job], topic_id: int, job_type: str) -> int:
         """Envoie une liste d'offres"""
         if not jobs:
-            self.logger.warning("Aucune offre à envoyer", topic_id=topic_id)
+            print("⚠️ Aucune offre à envoyer")
             return 0
         
-        self.logger.info("Début envoi offres", count=len(jobs), topic_id=topic_id)
+        print(f"📤 Envoi de {len(jobs)} offres vers le topic {topic_id}")
         
         sent_count = 0
-        for job in jobs:
+        for i, job in enumerate(jobs, 1):
+            print(f"📨 Envoi {i}/{len(jobs)}: {job.title[:50]}...")
             success = await self.send_job(job, topic_id, job_type)
             if success:
                 sent_count += 1
@@ -135,7 +123,7 @@ class TelegramJobBot:
             # Rate limiting
             await asyncio.sleep(2)
         
-        self.logger.info("Envoi terminé", sent=sent_count, total=len(jobs))
+        print(f"🎯 Envoi terminé: {sent_count}/{len(jobs)} offres envoyées")
         return sent_count
 
 # Instance globale
