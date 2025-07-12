@@ -1,7 +1,4 @@
 [build]
 builder = "dockerfile"
 
-[deploy]
-startCommand = "python scheduler.py"
-restartPolicyType = "on_failure"
-restartPolicyMaxRetries = 10
+
