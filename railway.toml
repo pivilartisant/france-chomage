@@ -2,6 +2,6 @@
 builder = "dockerfile"
 
 [deploy]
-startCommand = "python -m france_chomage scheduler.py"
+startCommand = "python -m france_chomage scheduler"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
