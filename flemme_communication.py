@@ -3,10 +3,10 @@ import json
 from jobspy import scrape_jobs
 
 jobs = scrape_jobs(
-    site_name=["indeed", "linkedin"],
+    site_name=["indeed"],
     search_term="communication",
     location="Paris",
-    results_wanted=20,
+    results_wanted=5,
     country_indeed='FRANCE',
     
     # linkedin_fetch_description=True # gets more info such as description, direct job url (slower)
