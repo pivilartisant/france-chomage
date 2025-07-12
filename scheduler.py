@@ -48,16 +48,16 @@ def run_design_jobs():
         print("✅ Offres design envoyées")
 
 # Schedule jobs pour communication (9h et 17h)
-schedule.every().day.at("09:00").do(run_communication_jobs)
+# schedule.every().day.at("09:00").do(run_communication_jobs)
 schedule.every().day.at("17:00").do(run_communication_jobs)
 
 # Schedule jobs pour design (10h et 18h pour éviter la surcharge)
-schedule.every().day.at("10:00").do(run_design_jobs)
+# schedule.every().day.at("10:00").do(run_design_jobs)
 schedule.every().day.at("18:00").do(run_design_jobs)
 
 print("🤖 Planificateur démarré.")
-print("📅 Communication: 9h et 17h")
-print("🎨 Design: 10h et 18h")
+print("📅 Communication: 17h")
+print("🎨 Design: 18h")
 print("\n🚀 Exécution immédiate pour tester...")
 
 # Exécute le flow complet une fois au démarrage (sauf si SKIP_INIT_JOB=1)
