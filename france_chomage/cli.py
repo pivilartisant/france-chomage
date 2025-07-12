@@ -5,7 +5,7 @@ import asyncio
 import typer
 
 from france_chomage.config import settings
-from france_chomage.scraping import CommunicationScraper, DesignScraper
+from france_chomage.scraping import CommunicationScraper, DesignScraper, RestaurationScraper
 from france_chomage.telegram.bot import telegram_bot
 from france_chomage.environments import detect_environment
 
@@ -13,7 +13,7 @@ app = typer.Typer(help="🇫🇷 France Chômage Bot - CLI unifié")
 
 @app.command()
 def scrape(
-    domain: str = typer.Argument(..., help="Domaine à scraper (communication/design)")
+    domain: str = typer.Argument(..., help="Domaine à scraper (communication/design/restauration)")
 ):
     """Scrape les offres d'emploi pour un domaine"""
     
@@ -22,9 +22,11 @@ def scrape(
             scraper = CommunicationScraper()
         elif domain == "design":
             scraper = DesignScraper()
+        elif domain == "restauration":
+            scraper = RestaurationScraper()
         else:
             typer.echo(f"❌ Domaine inconnu: {domain}")
-            typer.echo("Domaines disponibles: communication, design")
+            typer.echo("Domaines disponibles: communication, design, restauration")
             raise typer.Exit(1)
         
         print(f"🔍 Début scraping {domain}")
@@ -38,7 +40,7 @@ def scrape(
 
 @app.command()
 def send(
-    domain: str = typer.Argument(..., help="Domaine à envoyer (communication/design)"),
+    domain: str = typer.Argument(..., help="Domaine à envoyer (communication/design/restauration)"),
 ):
     """Envoie les offres sur Telegram"""
     
@@ -49,6 +51,9 @@ def send(
         elif domain == "design":
             scraper = DesignScraper()
             topic_id = settings.telegram_design_topic_id
+        elif domain == "restauration":
+            scraper = RestaurationScraper()
+            topic_id = settings.telegram_restauration_topic_id
         else:
             typer.echo(f"❌ Domaine inconnu: {domain}")
             raise typer.Exit(1)
@@ -86,6 +91,9 @@ def workflow(
         elif domain == "design":
             scraper = DesignScraper()
             topic_id = settings.telegram_design_topic_id
+        elif domain == "restauration":
+            scraper = RestaurationScraper()
+            topic_id = settings.telegram_restauration_topic_id
         else:
             typer.echo(f"❌ Domaine inconnu: {domain}")
             raise typer.Exit(1)
@@ -130,8 +138,10 @@ def info():
     typer.echo(f"Résultats demandés: {settings.results_wanted}")
     typer.echo(f"Topic communication: {settings.telegram_communication_topic_id}")
     typer.echo(f"Topic design: {settings.telegram_design_topic_id}")
+    typer.echo(f"Topic restauration: {settings.telegram_restauration_topic_id}")
     typer.echo(f"Heures communication: {settings.communication_hours}")
     typer.echo(f"Heures design: {settings.design_hours}")
+    typer.echo(f"Heures restauration: {settings.restauration_hours}")
     typer.echo(f"Skip jobs initiaux: {settings.skip_init_job}")
 
 @app.command()

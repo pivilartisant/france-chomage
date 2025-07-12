@@ -16,6 +16,7 @@ class Settings:
         self.telegram_group_id = os.getenv("TELEGRAM_GROUP_ID")
         self.telegram_communication_topic_id = int(os.getenv("TELEGRAM_COMMUNICATION_TOPIC_ID", "3"))
         self.telegram_design_topic_id = int(os.getenv("TELEGRAM_DESIGN_TOPIC_ID", "40"))
+        self.telegram_restauration_topic_id = int(os.getenv("TELEGRAM_RESTAURATION_TOPIC_ID", "326"))
         
         # Scraping
         self.results_wanted = int(os.getenv("RESULTS_WANTED", "15"))
@@ -26,6 +27,7 @@ class Settings:
         self.skip_init_job = int(os.getenv("SKIP_INIT_JOB", "0"))
         self.communication_hours = [17]
         self.design_hours = [18]
+        self.restauration_hours = [19]
         
         # Retry configuration
         self.max_retries = int(os.getenv("MAX_RETRIES", "3"))
