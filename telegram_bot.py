@@ -10,10 +10,10 @@ load_dotenv()
 # Bot configuration
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')  # e.g., '-1001234567890'
-TOPIC_ID = int(os.getenv('TELEGRAM_TOPIC_ID', '3'))  # topic ID for communication
+TOPIC_ID = int(os.getenv('TELEGRAM_COMMUNICATION_TOPIC_ID'))  # topic ID for communication
 
 class JobTelegramBot:
-    def __init__(self, bot_token, group_id, topic_id, jobs_file='jobs.json', job_type='communication'):
+    def __init__(self, bot_token, group_id, topic_id, jobs_file='jobs_communication.json', job_type='communication'):
         self.bot = Bot(token=bot_token)
         self.group_id = group_id
         self.topic_id = topic_id

@@ -24,10 +24,10 @@ def scrape_design_with_stealth():
             time.sleep(delay)
             
             # Paramètres stealth
-            results_wanted = int(os.getenv('RESULTS_WANTED', '10'))
+            results_wanted = int(os.getenv('RESULTS_WANTED'))
             scrape_params = {
-                'site_name': ["indeed"],
-                'search_term': "design graphique OR graphiste OR designer",
+                'site_name': ["indeed", "linkedin"],  # LinkedIn plus fiable
+                'search_term': "design OR graphisme OR artistique OR graphiste",
                 'location': "Paris",
                 'results_wanted': results_wanted,
                 'country_indeed': 'FRANCE',
@@ -53,24 +53,8 @@ def scrape_design_with_stealth():
     return None
 
 # Execution avec fallback
-print("🎨 Scraping design avec mode stealth...")
+print("🎨 Scraping design...")
 jobs = scrape_design_with_stealth()
-
-if jobs is None or len(jobs) == 0:
-    print("📡 Fallback vers LinkedIn...")
-    try:
-        results_wanted = int(os.getenv('RESULTS_WANTED', '10'))
-        jobs = scrape_jobs(
-            site_name=["linkedin"],
-            search_term="design graphique OR graphiste OR UI UX OR designer",
-            location="Paris",
-            results_wanted=results_wanted,
-            linkedin_fetch_description=True,
-        )
-        print(f"✅ LinkedIn: {len(jobs)} offres")
-    except Exception as e:
-        print(f"❌ LinkedIn aussi bloqué: {e}")
-        jobs = None
 
 # Sauvegarde
 if jobs is not None and len(jobs) > 0:
@@ -84,7 +68,4 @@ if jobs is not None and len(jobs) > 0:
         json.dump(data, jsonfile, indent=4)
     
     print("✅ Offres sauvegardées dans jobs_design.json")
-else:
-    print("⚠️ Création d'un fichier vide")
-    with open('jobs_design.json', 'w') as f:
-        json.dump([], f)
+

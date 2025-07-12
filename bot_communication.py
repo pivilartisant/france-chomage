@@ -8,7 +8,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
-COMMUNICATION_TOPIC_ID = int(os.getenv('TELEGRAM_TOPIC_ID', '3'))
+COMMUNICATION_TOPIC_ID = int(os.getenv('TELEGRAM_COMMUNICATION_TOPIC_ID'))
 
 async def send_communication_jobs():
     """Send communication jobs to topic"""

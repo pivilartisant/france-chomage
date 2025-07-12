@@ -8,7 +8,7 @@ load_dotenv()
 
 BOT_TOKEN = os.getenv('TELEGRAM_BOT_TOKEN')
 GROUP_ID = os.getenv('TELEGRAM_GROUP_ID')
-DESIGN_TOPIC_ID = 40  # Topic dédié design
+DESIGN_TOPIC_ID =  int(os.getenv('TELEGRAM_DESIGN_TOPIC_ID'))
 
 async def send_design_jobs():
     """Send design jobs to topic"""

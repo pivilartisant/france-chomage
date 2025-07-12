@@ -6,7 +6,7 @@
 ```bash
 python flemme_communication.py
 ```
-- Vérifiez que `jobs.json` est créé
+- Vérifiez que `jobs_communication.json` est créé
 - Regardez le contenu (nombre d'offres)
 
 ### Design :

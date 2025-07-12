@@ -14,15 +14,17 @@ def run_communication_jobs():
     print("🎯 Lancement des offres communication...")
     
     # Scrape les offres de communication (version stealth en priorité)
-    result = subprocess.run(['python', 'flemme_communication_stealth.py'], capture_output=True, text=True)
+    print("📡 Scraping communication en cours...")
+    result = subprocess.run(['python', 'scrape_communication.py'])
     if result.returncode != 0:
-        print(f"Erreur scraping communication: {result.stderr}")
+        print(f"❌ Erreur scraping communication (code: {result.returncode})")
         return
     
     # Envoie sur Telegram
-    result = subprocess.run(['python', 'bot_communication.py'], capture_output=True, text=True)
+    print("📤 Envoi vers Telegram...")
+    result = subprocess.run(['python', 'bot_communication.py'])
     if result.returncode != 0:
-        print(f"Erreur envoi communication: {result.stderr}")
+        print(f"❌ Erreur envoi communication (code: {result.returncode})")
     else:
         print("✅ Offres communication envoyées")
 
@@ -31,15 +33,17 @@ def run_design_jobs():
     print("🎨 Lancement des offres design...")
     
     # Scrape les offres de design (version stealth en priorité)
-    result = subprocess.run(['python', 'flemme_design_stealth.py'], capture_output=True, text=True)
+    print("📡 Scraping design en cours...")
+    result = subprocess.run(['python', 'scrape_design.py'])
     if result.returncode != 0:
-        print(f"Erreur scraping design: {result.stderr}")
+        print(f"❌ Erreur scraping design (code: {result.returncode})")
         return
     
     # Envoie sur Telegram
-    result = subprocess.run(['python', 'bot_design.py'], capture_output=True, text=True)
+    print("📤 Envoi vers Telegram...")
+    result = subprocess.run(['python', 'bot_design.py'])
     if result.returncode != 0:
-        print(f"Erreur envoi design: {result.stderr}")
+        print(f"❌ Erreur envoi design (code: {result.returncode})")
     else:
         print("✅ Offres design envoyées")
 
