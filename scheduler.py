@@ -60,9 +60,13 @@ print("📅 Communication: 9h et 17h")
 print("🎨 Design: 10h et 18h")
 print("\n🚀 Exécution immédiate pour tester...")
 
-# Exécute le flow complet une fois au démarrage
-run_communication_jobs()
-run_design_jobs()
+# Exécute le flow complet une fois au démarrage (sauf si SKIP_INIT_JOB=1)
+if os.getenv('SKIP_INIT_JOB', '0') != '1':
+    print("🚀 Exécution immédiate des jobs au démarrage...")
+    run_communication_jobs()
+    run_design_jobs()
+else:
+    print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
 
 print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
 
