@@ -53,16 +53,13 @@ jobs = scrape_communication_linkedin_only()
 # Sauvegarde
 if jobs is not None and len(jobs) > 0:
     print(f"📊 Total: {len(jobs)} offres de communication")
-    jobs.to_csv("jobs.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False)
+    jobs.to_csv("jobs_communications.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False)
     
-    with open('jobs.csv', mode='r', newline='', encoding='utf-8') as csvfile:
+    with open('jobs_communication.csv', mode='r', newline='', encoding='utf-8') as csvfile:
         data = list(csv.DictReader(csvfile))
     
-    with open('jobs.json', mode='w', encoding='utf-8') as jsonfile:
+    with open('jobs_communication.json', mode='w', encoding='utf-8') as jsonfile:
         json.dump(data, jsonfile, indent=4)
     
-    print("✅ Offres sauvegardées dans jobs.json")
-else:
-    print("⚠️ Création d'un fichier vide")
-    with open('jobs.json', 'w') as f:
-        json.dump([], f)
+    print("✅ Offres sauvegardées dans jobs_communication.json")
+
