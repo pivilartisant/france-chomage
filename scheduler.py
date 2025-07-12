@@ -13,9 +13,9 @@ def run_communication_jobs():
     """Scrape et envoie les offres de communication"""
     print("🎯 Lancement des offres communication...")
     
-    # Scrape les offres de communication (version stealth en priorité)
+    # Scrape les offres de communication (détection auto environnement)
     print("📡 Scraping communication en cours...")
-    result = subprocess.run(['python', 'scrape_communication.py'])
+    result = subprocess.run(['python', 'detect_environment.py', 'communication'])
     if result.returncode != 0:
         print(f"❌ Erreur scraping communication (code: {result.returncode})")
         return
@@ -32,9 +32,9 @@ def run_design_jobs():
     """Scrape et envoie les offres de design"""
     print("🎨 Lancement des offres design...")
     
-    # Scrape les offres de design (version stealth en priorité)
+    # Scrape les offres de design (détection auto environnement)
     print("📡 Scraping design en cours...")
-    result = subprocess.run(['python', 'scrape_design.py'])
+    result = subprocess.run(['python', 'detect_environment.py', 'design'])
     if result.returncode != 0:
         print(f"❌ Erreur scraping design (code: {result.returncode})")
         return
