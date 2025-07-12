@@ -53,7 +53,7 @@ jobs = scrape_communication_linkedin_only()
 # Sauvegarde
 if jobs is not None and len(jobs) > 0:
     print(f"📊 Total: {len(jobs)} offres de communication")
-    jobs.to_csv("jobs_communications.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False)
+    jobs.to_csv("jobs_communication.csv", quoting=csv.QUOTE_NONNUMERIC, escapechar="\\", index=False)
     
     with open('jobs_communication.csv', mode='r', newline='', encoding='utf-8') as csvfile:
         data = list(csv.DictReader(csvfile))
