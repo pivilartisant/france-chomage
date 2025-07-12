@@ -12,17 +12,11 @@ load_dotenv()
 def scrape_with_stealth():
     """Scrape avec techniques anti-détection"""
     
-    # Proxies publics (optionnel, peut aider)
-    proxies = [
-        # "http://proxy1:port",
-        # "http://proxy2:port",
-    ]
-    
     max_retries = 3
     
     for attempt in range(max_retries):
         try:
-            print(f"🕵️ Tentative {attempt + 1}/{max_retries} avec techniques stealth...")
+            print(f"🕵️ Tentative {attempt + 1}/{max_retries}...")
             
             # Délai aléatoire pour éviter la détection
             delay = random.uniform(2, 5)
@@ -31,20 +25,14 @@ def scrape_with_stealth():
             
             # Paramètres stealth
             results_wanted = int(os.getenv('RESULTS_WANTED'))
-            scrape_params = {
-                'site_name': ["indeed", "linkedin"],
-                'search_term': "communication",
-                'location': "Paris",
-                'results_wanted': results_wanted,
-                'country_indeed': 'FRANCE',
-                'delay': random.uniform(1, 3),  # Délai entre requêtes
-            }
             
-            # Ajoute proxies si disponibles
-            if proxies:
-                scrape_params['proxies'] = proxies
-            
-            jobs = scrape_jobs(**scrape_params)
+            jobs = scrape_jobs(
+                search_term= "communication",
+                site_name= ["indeed", "linkedin"],
+                location= "Paris",
+                results_wanted= results_wanted,
+                country_indeed= 'FRANCE',
+                )
             
             if len(jobs) > 0:
                 print(f"✅ Succès! {len(jobs)} offres récupérées")
@@ -53,18 +41,31 @@ def scrape_with_stealth():
                 print("⚠️ Aucune offre trouvée, nouvelle tentative...")
                 
         except Exception as e:
-            print(f"❌ Tentative {attempt + 1} échouée: {str(e)[:100]}...")
+            import traceback
+            print(f"❌ Tentative {attempt + 1} échouée:")
+            print(f"   Type d'erreur: {type(e).__name__}")
+            print(f"   Message: {str(e)}")
+            print(f"   Traceback complet:")
+            traceback.print_exc()
             if attempt < max_retries - 1:
                 wait_time = (attempt + 1) * 10  # Attente progressive
                 print(f"⏳ Attente de {wait_time}s avant nouvelle tentative...")
                 time.sleep(wait_time)
-    
     print("🚫 Toutes les tentatives ont échoué")
     return None
 
 # Execution avec fallback
 print("🎯 Scraping communication...")
-jobs = scrape_with_stealth()
+try:
+    jobs = scrape_with_stealth()
+except Exception as e:
+    import traceback
+    print(f"❌ Erreur critique dans scrape_with_stealth:")
+    print(f"   Type d'erreur: {type(e).__name__}")
+    print(f"   Message: {str(e)}")
+    print(f"   Traceback complet:")
+    traceback.print_exc()
+    jobs = None
 
 # Sauvegarde
 if jobs is not None and len(jobs) > 0:

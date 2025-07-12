@@ -16,7 +16,7 @@ def scrape_design_with_stealth():
     
     for attempt in range(max_retries):
         try:
-            print(f"🎨 Tentative {attempt + 1}/{max_retries} avec techniques stealth...")
+            print(f"🎨 Tentative {attempt + 1}/{max_retries}...")
             
             # Délai aléatoire pour éviter la détection
             delay = random.uniform(2, 5)
@@ -25,16 +25,15 @@ def scrape_design_with_stealth():
             
             # Paramètres stealth
             results_wanted = int(os.getenv('RESULTS_WANTED'))
-            scrape_params = {
-                'site_name': ["indeed", "linkedin"],  # LinkedIn plus fiable
-                'search_term': "design OR graphisme OR artistique OR graphiste",
-                'location': "Paris",
-                'results_wanted': results_wanted,
-                'country_indeed': 'FRANCE',
-                'delay': random.uniform(1, 3),  # Délai entre requêtes
-            }
+
             
-            jobs = scrape_jobs(**scrape_params)
+            jobs = scrape_jobs(
+                site_name= ["indeed", "linkedin"], 
+                search_term= "design OR graphisme OR artistique OR graphiste",
+                location= "Paris",
+                results_wanted= results_wanted,
+                country_indeed= 'FRANCE',
+            )
             
             if len(jobs) > 0:
                 print(f"✅ Succès! {len(jobs)} offres design récupérées")
@@ -43,7 +42,12 @@ def scrape_design_with_stealth():
                 print("⚠️ Aucune offre trouvée, nouvelle tentative...")
                 
         except Exception as e:
-            print(f"❌ Tentative {attempt + 1} échouée: {str(e)[:100]}...")
+            import traceback
+            print(f"❌ Tentative {attempt + 1} échouée:")
+            print(f"   Type d'erreur: {type(e).__name__}")
+            print(f"   Message: {str(e)}")
+            print(f"   Traceback complet:")
+            traceback.print_exc()
             if attempt < max_retries - 1:
                 wait_time = (attempt + 1) * 10  # Attente progressive
                 print(f"⏳ Attente de {wait_time}s avant nouvelle tentative...")
@@ -54,7 +58,16 @@ def scrape_design_with_stealth():
 
 # Execution avec fallback
 print("🎨 Scraping design...")
-jobs = scrape_design_with_stealth()
+try:
+    jobs = scrape_design_with_stealth()
+except Exception as e:
+    import traceback
+    print(f"❌ Erreur critique dans scrape_design_with_stealth:")
+    print(f"   Type d'erreur: {type(e).__name__}")
+    print(f"   Message: {str(e)}")
+    print(f"   Traceback complet:")
+    traceback.print_exc()
+    jobs = None
 
 # Sauvegarde
 if jobs is not None and len(jobs) > 0:
