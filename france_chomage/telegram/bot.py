@@ -5,6 +5,7 @@ import asyncio
 from typing import List
 
 from telegram import Bot
+from telegram.request import HTTPXRequest
 from france_chomage.config import settings
 from france_chomage.models import Job
 
@@ -12,7 +13,14 @@ class TelegramJobBot:
     """Bot Telegram générique pour poster des offres d'emploi"""
     
     def __init__(self):
-        self.bot = Bot(token=settings.telegram_bot_token)
+        # Configuration HTTPXRequest avec un pool de connexions plus grand
+        request = HTTPXRequest(
+            connection_pool_size=10,  # Augmente le pool de connexions
+            pool_timeout=10.0,        # Augmente le timeout du pool
+            read_timeout=10.0,        # Augmente le timeout de lecture
+            write_timeout=10.0        # Augmente le timeout d'écriture
+        )
+        self.bot = Bot(token=settings.telegram_bot_token, request=request)
         self.group_id = settings.telegram_group_id
     
     def escape_markdown(self, text: str) -> str:
