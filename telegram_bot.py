@@ -30,27 +30,45 @@ class JobTelegramBot:
             print(f"Fichier {self.jobs_file} introuvable. Lancez d'abord le script correspondant")
             return []
     
+    def escape_markdown(self, text):
+        """Échappe les caractères spéciaux Markdown"""
+        if not text:
+            return ""
+        # Échappe les caractères problématiques pour Telegram Markdown
+        escape_chars = ['*', '_', '[', ']', '(', ')', '~', '`', '>', '#', '+', '-', '=', '|', '{', '}', '.', '!']
+        for char in escape_chars:
+            text = text.replace(char, f'\\{char}')
+        return text
+    
     def format_job_message(self, job):
         """Format a job posting for Telegram in French"""
-        message = f"🎯 **{job['title']}**\n\n"
-        message += f"🏢 **{job['company']}**\n"
-        message += f"📍 {job['location']}\n"
-        message += f"📅 Publié le : {job['date_posted']}\n"
+        # Échappe tous les textes
+        title = self.escape_markdown(job.get('title', ''))
+        company = self.escape_markdown(job.get('company', ''))
+        location = self.escape_markdown(job.get('location', ''))
+        date_posted = self.escape_markdown(job.get('date_posted', ''))
+        
+        message = f"🎯 *{title}*\n\n"
+        message += f"🏢 *{company}*\n"
+        message += f"📍 {location}\n"
+        message += f"📅 Publié le : {date_posted}\n"
         
         if job.get('is_remote') == 'True':
             message += f"🏠 Télétravail possible\n"
             
         if job.get('salary_source'):
-            message += f"💰 {job['salary_source']}\n"
+            salary = self.escape_markdown(job.get('salary_source', ''))
+            message += f"💰 {salary}\n"
             
-        message += f"\n🔗 [Postuler ici]({job['job_url']})\n"
+        # URL sans échappement car Telegram gère ça
+        job_url = job.get('job_url', '')
+        message += f"\n🔗 [Postuler ici]({job_url})\n"
         
-        # Add description preview (first 200 chars)
+        # Description avec échappement
         if job.get('description'):
             desc = job['description'][:200].replace('\n', ' ').strip()
-            message += f"\n📝 {desc}..."
-            
-        message += f"\n\n#{job['site']} #{self.job_type} #Paris #emploi"
+            desc = self.escape_markdown(desc)
+            message += f"\n📝 {desc}\\.\\.\\."
         
         return message
     
@@ -67,13 +85,24 @@ class JobTelegramBot:
             
             for job in jobs:
                 message = self.format_job_message(job)
-                await self.bot.send_message(
-                    chat_id=self.group_id,
-                    message_thread_id=self.topic_id,
-                    text=message,
-                    parse_mode='Markdown',
-                    disable_web_page_preview=False
-                )
+                try:
+                    await self.bot.send_message(
+                        chat_id=self.group_id,
+                        message_thread_id=self.topic_id,
+                        text=message,
+                        parse_mode='MarkdownV2',
+                        disable_web_page_preview=False
+                    )
+                except Exception as e:
+                    print(f"⚠️ Erreur envoi message, tentative sans Markdown: {str(e)[:100]}")
+                    # Fallback sans formatage
+                    clean_message = message.replace('*', '').replace('\\', '').replace('_', '')
+                    await self.bot.send_message(
+                        chat_id=self.group_id,
+                        message_thread_id=self.topic_id,
+                        text=clean_message,
+                        disable_web_page_preview=False
+                    )
                 print(f"Offre envoyée : {job['title']}")
                 await asyncio.sleep(2)  # Rate limiting
                 

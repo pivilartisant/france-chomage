@@ -6,11 +6,14 @@ WORKDIR /app
 # Force Python to show logs immediately
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies needed for jobspy
+# Install system dependencies needed for jobspy + stealth browsing
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
     curl \
+    wget \
+    gnupg \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

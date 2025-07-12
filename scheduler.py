@@ -13,8 +13,8 @@ def run_communication_jobs():
     """Scrape et envoie les offres de communication"""
     print("🎯 Lancement des offres communication...")
     
-    # Scrape les offres de communication
-    result = subprocess.run(['python', 'flemme_communication.py'], capture_output=True, text=True)
+    # Scrape les offres de communication (version stealth en priorité)
+    result = subprocess.run(['python', 'flemme_communication_stealth.py'], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Erreur scraping communication: {result.stderr}")
         return
@@ -30,8 +30,8 @@ def run_design_jobs():
     """Scrape et envoie les offres de design"""
     print("🎨 Lancement des offres design...")
     
-    # Scrape les offres de design
-    result = subprocess.run(['python', 'flemme_design.py'], capture_output=True, text=True)
+    # Scrape les offres de design (version stealth en priorité)
+    result = subprocess.run(['python', 'flemme_design_stealth.py'], capture_output=True, text=True)
     if result.returncode != 0:
         print(f"Erreur scraping design: {result.stderr}")
         return

@@ -20,7 +20,7 @@ async def send_communication_jobs():
         BOT_TOKEN, 
         GROUP_ID, 
         COMMUNICATION_TOPIC_ID,
-        jobs_file='jobs.json',
+        jobs_file='jobs_communication.json',
         job_type='communication'
     )
     await bot.run()
