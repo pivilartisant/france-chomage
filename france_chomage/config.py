@@ -14,11 +14,11 @@ class Settings:
         # Telegram
         self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.telegram_group_id = os.getenv("TELEGRAM_GROUP_ID")
-        self.telegram_communication_topic_id = int(os.getenv("TELEGRAM_COMMUNICATION_TOPIC_ID"))
-        self.telegram_design_topic_id = int(os.getenv("TELEGRAM_DESIGN_TOPIC_ID"))
+        self.telegram_communication_topic_id = int(os.getenv("TELEGRAM_COMMUNICATION_TOPIC_ID", "1"))
+        self.telegram_design_topic_id = int(os.getenv("TELEGRAM_DESIGN_TOPIC_ID", "2"))
         
         # Scraping
-        self.results_wanted = int(os.getenv("RESULTS_WANTED"))
+        self.results_wanted = int(os.getenv("RESULTS_WANTED", "15"))
         self.location = os.getenv("LOCATION", "Paris")
         self.country = os.getenv("COUNTRY", "FRANCE")
         

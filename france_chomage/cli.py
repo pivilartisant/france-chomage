@@ -3,8 +3,6 @@ Interface en ligne de commande unifiée
 """
 import asyncio
 import typer
-import structlog
-from pathlib import Path
 
 from france_chomage.config import settings
 from france_chomage.scraping import CommunicationScraper, DesignScraper
@@ -13,26 +11,9 @@ from france_chomage.environments import detect_environment
 
 app = typer.Typer(help="🇫🇷 France Chômage Bot - CLI unifié")
 
-# Setup logging pour CLI
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_log_level,
-        structlog.processors.TimeStamper(fmt="%H:%M:%S"),
-        structlog.dev.ConsoleRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
-
 @app.command()
 def scrape(
-    domain: str = typer.Argument(..., help="Domaine à scraper (communication/design)"),
-    save: bool = typer.Option(True, help="Sauvegarder les résultats")
+    domain: str = typer.Argument(..., help="Domaine à scraper (communication/design)")
 ):
     """Scrape les offres d'emploi pour un domaine"""
     
@@ -46,7 +27,7 @@ def scrape(
             typer.echo("Domaines disponibles: communication, design")
             raise typer.Exit(1)
         
-        logger.info("Début scraping", domain=domain)
+        print(f"🔍 Début scraping {domain}")
         jobs = await scraper.scrape()
         
         typer.echo(f"✅ {len(jobs)} offres trouvées pour {domain}")
@@ -80,7 +61,7 @@ def send(
             typer.echo(f"Lancez d'abord: python -m france_chomage scrape {domain}")
             raise typer.Exit(1)
         
-        logger.info("Envoi vers Telegram", domain=domain, count=len(jobs))
+        print(f"📤 Envoi de {len(jobs)} offres {domain} vers Telegram")
         
         sent_count = await telegram_bot.send_jobs(
             jobs=jobs,
@@ -110,7 +91,7 @@ def workflow(
             raise typer.Exit(1)
         
         # Scraping
-        logger.info("Workflow complet", domain=domain)
+        print(f"🔄 Workflow complet {domain}")
         jobs = await scraper.scrape()
         
         if not jobs:
@@ -133,7 +114,7 @@ def scheduler():
     """Lance le scheduler principal"""
     from france_chomage.scheduler import main
     
-    logger.info("Lancement du scheduler principal")
+    print("🚀 Lancement du scheduler principal")
     asyncio.run(main())
 
 @app.command()

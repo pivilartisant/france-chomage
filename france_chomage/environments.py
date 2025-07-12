@@ -13,7 +13,7 @@ class Environment(Enum):
 class SiteStrategy(Enum):
     """Stratégies de sites selon l'environnement"""
     LOCAL = ("indeed", "linkedin")  # Tous les sites en local
-    DOCKER = ("linkedin",)          # LinkedIn seul en Docker (plus fiable)
+    DOCKER = ("linkedin",)          # LinkedIn seul en Docker
 
 def detect_environment() -> Environment:
     """Détecte l'environnement d'exécution"""

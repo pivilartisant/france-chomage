@@ -4,7 +4,7 @@ Scraper de base avec logique commune
 import asyncio
 import json
 import random
-from abc import ABC, abstractmethod
+from abc import ABC
 from pathlib import Path
 from typing import List, Optional
 
@@ -117,7 +117,7 @@ class ScraperBase(ABC):
         """Sauvegarde les jobs en JSON"""
         output_path = Path(f"jobs_{self.filename_prefix}.json")
         
-        jobs_data = [job.dict() for job in jobs]
+        jobs_data = [job.model_dump() for job in jobs]
         
         with output_path.open('w', encoding='utf-8') as f:
             json.dump(jobs_data, f, ensure_ascii=False, indent=2)

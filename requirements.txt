@@ -3,10 +3,8 @@ python-jobspy==1.1.15
 pandas
 python-dotenv
 pydantic==2.5.0
-pydantic-settings==2.1.0
 schedule==1.2.0
 typer==0.9.0
-structlog==23.2.0
 pytest==7.4.3
 pytest-asyncio==0.21.1
 pytest-mock==3.12.0

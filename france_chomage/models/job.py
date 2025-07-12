@@ -1,7 +1,7 @@
 """
 Modèle de données pour les offres d'emploi
 """
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 from typing import Optional
 
 class Job(BaseModel):
@@ -61,7 +61,7 @@ class Job(BaseModel):
         # Limite la longueur du titre
         return self.title[:80] + "..." if len(self.title) > 80 else self.title
         
-    class Config:
-        # Permet la création depuis dict pandas
-        extra = "ignore"
-        str_strip_whitespace = True
+    model_config = ConfigDict(
+        extra="ignore",
+        str_strip_whitespace=True
+    )
