@@ -8,6 +8,9 @@ from france_chomage.config import settings
 from france_chomage.scraping import CommunicationScraper, DesignScraper, RestaurationScraper
 from france_chomage.telegram.bot import telegram_bot
 
+# Variable globale pour collecter les statistiques
+job_stats = {}
+
 def run_communication_jobs():
     """Scrape et envoie les offres de communication"""
     print("🎯 Lancement des offres communication...")
@@ -33,8 +36,12 @@ def run_communication_jobs():
             
             print(f"✅ {sent_count} offres communication envoyées")
             
+            # Sauvegarder les stats
+            job_stats['communication'] = {'jobs_sent': sent_count}
+            
         except Exception as e:
             print(f"❌ Erreur communication: {e}")
+            job_stats['communication'] = {'jobs_sent': 0, 'error': str(e)}
     
     # Run async function
     asyncio.run(async_communication())
@@ -64,8 +71,12 @@ def run_design_jobs():
             
             print(f"✅ {sent_count} offres design envoyées")
             
+            # Sauvegarder les stats
+            job_stats['design'] = {'jobs_sent': sent_count}
+            
         except Exception as e:
             print(f"❌ Erreur design: {e}")
+            job_stats['design'] = {'jobs_sent': 0, 'error': str(e)}
     
     # Run async function
     asyncio.run(async_design())
@@ -95,11 +106,29 @@ def run_restauration_jobs():
             
             print(f"✅ {sent_count} offres restauration envoyées")
             
+            # Sauvegarder les stats
+            job_stats['restauration'] = {'jobs_sent': sent_count}
+            
         except Exception as e:
             print(f"❌ Erreur restauration: {e}")
+            job_stats['restauration'] = {'jobs_sent': 0, 'error': str(e)}
     
     # Run async function
     asyncio.run(async_restauration())
+
+async def send_update_summary():
+    """Envoie un résumé des statistiques vers le topic général"""
+    if job_stats:
+        print("📊 Envoi du résumé des mises à jour...")
+        await telegram_bot.send_update_summary(job_stats)
+        # Réinitialiser les stats après envoi
+        job_stats.clear()
+    else:
+        print("⚠️ Aucune statistique à envoyer")
+
+def run_update_summary():
+    """Wrapper synchrone pour envoyer le résumé"""
+    asyncio.run(send_update_summary())
 
 # Schedule jobs
 for hour in settings.communication_hours:
@@ -113,6 +142,10 @@ for hour in settings.design_hours:
 for hour in settings.restauration_hours:
     schedule.every().day.at(f"{hour:02d}:00").do(run_restauration_jobs)
     print(f"🍽️ Restauration programmée à {hour:02d}:00")
+
+# Programmer le résumé quotidien à 8h30
+schedule.every().day.at("08:30").do(run_update_summary)
+print("📊 Résumé général programmé à 08:30")
 
 print("🤖 Planificateur démarré.")
 

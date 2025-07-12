@@ -62,9 +62,6 @@ class TelegramJobBot:
             if len(job.description) > 200:
                 message += "\\.\\.\\."
         
-        # Hashtags
-        message += f"\n\n#{job.site} #{job_type} #Paris #emploi"
-        
         return message
     
     async def send_job(self, job: Job, topic_id: int, job_type: str) -> bool:
@@ -125,6 +122,59 @@ class TelegramJobBot:
         
         print(f"🎯 Envoi terminé: {sent_count}/{len(jobs)} offres envoyées")
         return sent_count
+    
+    async def send_update_summary(self, updates: dict) -> bool:
+        """Envoie un résumé des mises à jour vers le topic général"""
+        try:
+            from datetime import datetime
+            
+            # Construction du message de résumé
+            message = "📊 *Mise à jour France Chômage Bot*\n\n"
+            
+            # Informations par catégorie
+            total_jobs = 0
+            for category, info in updates.items():
+                jobs_count = info.get('jobs_sent', 0)
+                total_jobs += jobs_count
+                emoji = {'communication': '🎯', 'design': '🎨', 'restauration': '🍽️'}.get(category, '📋')
+                
+                message += f"{emoji} *{category.title()}*: {jobs_count} offres\n"
+                
+                if info.get('error'):
+                    message += f"  ⚠️ Erreur: {info['error']}\n"
+            
+            # Résumé total
+            message += f"\n📈 *Total*: {total_jobs} nouvelles offres\n"
+            message += f"🕒 *Dernière mise à jour*: {datetime.now().strftime('%d/%m/%Y à %H:%M')}\n"
+            message += "A bientôt pour plus d'offres"
+            
+            await self.bot.send_message(
+                chat_id=self.group_id,
+                message_thread_id=settings.telegram_group_id,
+                text=message,
+                parse_mode='MarkdownV2',
+                disable_web_page_preview=True
+            )
+            
+            print(f"📊 Résumé envoyé vers topic général ({settings.telegram_general_topic_id})")
+            return True
+            
+        except Exception as exc:
+            print(f"❌ Erreur envoi résumé: {exc}")
+            # Fallback sans formatage
+            try:
+                clean_message = message.replace('*', '').replace('\\', '').replace('_', '')
+                await self.bot.send_message(
+                    chat_id=self.group_id,
+                    message_thread_id=settings.telegram_general_topic_id,
+                    text=clean_message,
+                    disable_web_page_preview=True
+                )
+                print("📊 Résumé envoyé (texte brut)")
+                return True
+            except Exception as exc2:
+                print(f"❌ Échec total envoi résumé: {exc2}")
+                return False
 
 # Instance globale
 telegram_bot = TelegramJobBot()

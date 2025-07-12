@@ -17,6 +17,7 @@ class Settings:
         self.telegram_communication_topic_id = int(os.getenv("TELEGRAM_COMMUNICATION_TOPIC_ID", "3"))
         self.telegram_design_topic_id = int(os.getenv("TELEGRAM_DESIGN_TOPIC_ID", "40"))
         self.telegram_restauration_topic_id = int(os.getenv("TELEGRAM_RESTAURATION_TOPIC_ID", "326"))
+        self.telegram_general_topic_id = int(os.getenv("TELEGRAM_GENERAL_TOPIC_ID", "1"))
         
         # Scraping
         self.results_wanted = int(os.getenv("RESULTS_WANTED", "15"))

@@ -48,6 +48,9 @@ python -m france_chomage workflow restauration
 # Scheduler automatique (lance les workflows selon planning)
 python -m france_chomage scheduler
 
+# Envoie un résumé de statut vers le topic général
+python -m france_chomage update
+
 # Informations de configuration
 python -m france_chomage info
 ```
@@ -74,6 +77,13 @@ python -m france_chomage workflow restauration
 - Communication: 17:00
 - Design: 18:00  
 - Restauration: 19:00
+- Résumé général: automatique après chaque workflow
+
+**Résumés automatiques :**
+Le bot envoie automatiquement un résumé vers le topic général (ID: 1) avec:
+- Nombre d'offres par catégorie
+- Heure de dernière mise à jour
+- Erreurs éventuelles
 
 ## ⚙️ Configuration (.env)
 

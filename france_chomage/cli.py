@@ -139,6 +139,7 @@ def info():
     typer.echo(f"Topic communication: {settings.telegram_communication_topic_id}")
     typer.echo(f"Topic design: {settings.telegram_design_topic_id}")
     typer.echo(f"Topic restauration: {settings.telegram_restauration_topic_id}")
+    typer.echo(f"Topic général (résumés): {settings.telegram_general_topic_id}")
     typer.echo(f"Heures communication: {settings.communication_hours}")
     typer.echo(f"Heures design: {settings.design_hours}")
     typer.echo(f"Heures restauration: {settings.restauration_hours}")
@@ -169,6 +170,48 @@ def test():
             raise typer.Exit(1)
     
     asyncio.run(_test())
+
+@app.command()
+def update():
+    """Envoie un résumé de statut vers le topic général"""
+    
+    async def _update():
+        # Collecte les informations des fichiers JSON existants
+        from pathlib import Path
+        
+        updates = {}
+        categories = ['communication', 'design', 'restauration']
+        
+        for category in categories:
+            file_path = Path(f"jobs_{category}.json")
+            if file_path.exists():
+                try:
+                    import json
+                    with file_path.open('r', encoding='utf-8') as f:
+                        data = json.load(f)
+                    
+                    job_count = len(data) if isinstance(data, list) else 0
+                    updates[category] = {'jobs_sent': job_count}
+                    print(f"📁 {category}: {job_count} offres dans le fichier")
+                    
+                except Exception as e:
+                    updates[category] = {'jobs_sent': 0, 'error': f"Erreur lecture fichier: {e}"}
+                    print(f"❌ Erreur lecture {category}: {e}")
+            else:
+                updates[category] = {'jobs_sent': 0, 'error': 'Fichier non trouvé'}
+                print(f"⚠️ Fichier jobs_{category}.json non trouvé")
+        
+        if updates:
+            print("📊 Envoi du résumé de statut...")
+            success = await telegram_bot.send_update_summary(updates)
+            if success:
+                typer.echo("✅ Résumé de statut envoyé")
+            else:
+                typer.echo("❌ Erreur lors de l'envoi du résumé")
+        else:
+            typer.echo("⚠️ Aucune donnée à envoyer")
+    
+    asyncio.run(_update())
 
 if __name__ == "__main__":
     app()
