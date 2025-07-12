@@ -1,171 +1,104 @@
 """
-Nouveau scheduler utilisant APScheduler
+Simple scheduler like the original v1.0
 """
+import schedule
+import time
 import asyncio
-import structlog
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
-
 from france_chomage.config import settings
 from france_chomage.scraping import CommunicationScraper, DesignScraper
 from france_chomage.telegram.bot import telegram_bot
 
-# Configuration du logging structuré
-structlog.configure(
-    processors=[
-        structlog.stdlib.filter_by_level,
-        structlog.stdlib.add_logger_name,
-        structlog.stdlib.add_log_level,
-        structlog.stdlib.PositionalArgumentsFormatter(),
-        structlog.processors.TimeStamper(fmt="iso"),
-        structlog.processors.StackInfoRenderer(),
-        structlog.processors.format_exc_info,
-        structlog.processors.UnicodeDecoder(),
-        structlog.processors.JSONRenderer()
-    ],
-    context_class=dict,
-    logger_factory=structlog.stdlib.LoggerFactory(),
-    wrapper_class=structlog.stdlib.BoundLogger,
-    cache_logger_on_first_use=True,
-)
-
-logger = structlog.get_logger()
-
-class JobScheduler:
-    """Scheduler principal utilisant APScheduler"""
+def run_communication_jobs():
+    """Scrape et envoie les offres de communication"""
+    print("🎯 Lancement des offres communication...")
     
-    def __init__(self):
-        self.scheduler = AsyncIOScheduler()
-        self.logger = logger.bind(component="scheduler")
-        
-    async def communication_flow(self):
-        """Workflow complet communication : scrape + envoi Telegram"""
-        self.logger.info("🎯 Début workflow communication")
-        
+    async def async_communication():
         try:
-            # Scraping
+            print("📡 Scraping communication en cours...")
             scraper = CommunicationScraper()
             jobs = await scraper.scrape()
             
             if not jobs:
-                self.logger.warning("Aucune offre communication trouvée")
+                print("⚠️ Aucune offre communication trouvée")
                 return
             
-            # Envoi Telegram
+            print(f"📦 {len(jobs)} offres trouvées")
+            
+            print("📤 Envoi vers Telegram...")
             sent_count = await telegram_bot.send_jobs(
                 jobs=jobs,
                 topic_id=settings.telegram_communication_topic_id,
                 job_type="communication"
             )
             
-            self.logger.info("Workflow communication terminé", 
-                           jobs_found=len(jobs), jobs_sent=sent_count)
+            print(f"✅ {sent_count} offres communication envoyées")
             
-        except Exception as exc:
-            self.logger.error("Erreur workflow communication", 
-                            error=str(exc), exc_info=True)
+        except Exception as e:
+            print(f"❌ Erreur communication: {e}")
     
-    async def design_flow(self):
-        """Workflow complet design : scrape + envoi Telegram"""
-        self.logger.info("🎨 Début workflow design")
-        
+    # Run async function
+    asyncio.run(async_communication())
+
+def run_design_jobs():
+    """Scrape et envoie les offres de design"""
+    print("🎨 Lancement des offres design...")
+    
+    async def async_design():
         try:
-            # Scraping
+            print("📡 Scraping design en cours...")
             scraper = DesignScraper()
             jobs = await scraper.scrape()
             
             if not jobs:
-                self.logger.warning("Aucune offre design trouvée")
+                print("⚠️ Aucune offre design trouvée")
                 return
             
-            # Envoi Telegram
+            print(f"📦 {len(jobs)} offres trouvées")
+            
+            print("📤 Envoi vers Telegram...")
             sent_count = await telegram_bot.send_jobs(
                 jobs=jobs,
                 topic_id=settings.telegram_design_topic_id,
                 job_type="design"
             )
             
-            self.logger.info("Workflow design terminé",
-                           jobs_found=len(jobs), jobs_sent=sent_count)
+            print(f"✅ {sent_count} offres design envoyées")
             
-        except Exception as exc:
-            self.logger.error("Erreur workflow design",
-                            error=str(exc), exc_info=True)
+        except Exception as e:
+            print(f"❌ Erreur design: {e}")
     
-    def setup_jobs(self):
-        """Configure les tâches planifiées"""
-        
-        # Communication : heures configurables
-        for hour in settings.communication_hours:
-            self.scheduler.add_job(
-                self.communication_flow,
-                CronTrigger(hour=hour, minute=0),
-                id=f'communication_{hour}h',
-                name=f'Communication {hour}h',
-                replace_existing=True
-            )
-            self.logger.info("Job communication programmé", hour=hour)
-        
-        # Design : heures configurables  
-        for hour in settings.design_hours:
-            self.scheduler.add_job(
-                self.design_flow,
-                CronTrigger(hour=hour, minute=0),
-                id=f'design_{hour}h',
-                name=f'Design {hour}h',
-                replace_existing=True
-            )
-            self.logger.info("Job design programmé", hour=hour)
-    
-    async def run_initial_jobs(self):
-        """Exécute les jobs immédiatement si configuré"""
-        if settings.skip_init_job:
-            self.logger.info("⏭️ Jobs initiaux ignorés (SKIP_INIT_JOB=1)")
-            return
-        
-        self.logger.info("🚀 Exécution des jobs initiaux")
-        
-        # Exécute les deux workflows en parallèle
-        await asyncio.gather(
-            self.communication_flow(),
-            self.design_flow(),
-            return_exceptions=True
-        )
-    
-    async def start(self):
-        """Démarre le scheduler"""
-        self.logger.info("🤖 Démarrage du scheduler")
-        self.logger.info("Configuration", 
-                        communication_hours=settings.communication_hours,
-                        design_hours=settings.design_hours,
-                        skip_init=settings.skip_init_job)
-        
-        # Configure les jobs
-        self.setup_jobs()
-        
-        # Démarre le scheduler
-        self.scheduler.start()
-        self.logger.info("⏰ Scheduler APScheduler démarré")
-        
-        # Exécute les jobs initiaux si configuré
-        await self.run_initial_jobs()
-        
-        self.logger.info("✅ Scheduler prêt - en attente des tâches programmées")
-        
-        try:
-            # Maintient le scheduler en vie
-            while True:
-                await asyncio.sleep(60)
-        except KeyboardInterrupt:
-            self.logger.info("🛑 Arrêt du scheduler demandé")
-            self.scheduler.shutdown()
-            self.logger.info("Scheduler arrêté")
+    # Run async function
+    asyncio.run(async_design())
 
-# Point d'entrée principal
-async def main():
-    """Point d'entrée principal du scheduler"""
-    scheduler = JobScheduler()
-    await scheduler.start()
+# Schedule jobs
+for hour in settings.communication_hours:
+    schedule.every().day.at(f"{hour:02d}:00").do(run_communication_jobs)
+    print(f"📅 Communication programmée à {hour:02d}:00")
+
+for hour in settings.design_hours:
+    schedule.every().day.at(f"{hour:02d}:00").do(run_design_jobs)
+    print(f"🎨 Design programmé à {hour:02d}:00")
+
+print("🤖 Planificateur démarré.")
+
+# Exécute immédiatement si configuré
+if not settings.skip_init_job:
+    print("🚀 Exécution immédiate des jobs au démarrage...")
+    run_communication_jobs()
+    run_design_jobs()
+else:
+    print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
+
+print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
+
+def main():
+    """Point d'entrée principal"""
+    try:
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
+    except KeyboardInterrupt:
+        print("\n🛑 Scheduler arrêté")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()
