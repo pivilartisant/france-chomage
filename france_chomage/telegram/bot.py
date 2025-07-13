@@ -164,7 +164,7 @@ class TelegramJobBot:
                 disable_web_page_preview=True
             )
             
-            print(f"📊 Résumé envoyé vers topic général ({settings.telegram_general_topic_id})")
+            print(f"📊 Résumé envoyé vers topic général ({settings.telegram_group_id})")
             return True
             
         except Exception as exc:
@@ -174,7 +174,7 @@ class TelegramJobBot:
                 clean_message = message.replace('*', '').replace('\\', '').replace('_', '')
                 await self.bot.send_message(
                     chat_id=self.group_id,
-                    message_thread_id=settings.telegram_general_topic_id,
+                    message_thread_id=settings.telegram_group_id,
                     text=clean_message,
                     disable_web_page_preview=True
                 )

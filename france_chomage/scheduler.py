@@ -143,9 +143,9 @@ for hour in settings.restauration_hours:
     schedule.every().day.at(f"{hour:02d}:00").do(run_restauration_jobs)
     print(f"🍽️ Restauration programmée à {hour:02d}:00")
 
-# Programmer le résumé quotidien à 8h30
-schedule.every().day.at("08:30").do(run_update_summary)
-print("📊 Résumé général programmé à 08:30")
+for hour in settings.update_hours:
+    schedule.every().day.at(f"{hour:02d}:00").do(run_update_summary)
+    print(f"📊 Résumé général programmée à {hour:02d}:00")
 
 print("🤖 Planificateur démarré.")
 

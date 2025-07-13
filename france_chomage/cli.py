@@ -139,7 +139,7 @@ def info():
     typer.echo(f"Topic communication: {settings.telegram_communication_topic_id}")
     typer.echo(f"Topic design: {settings.telegram_design_topic_id}")
     typer.echo(f"Topic restauration: {settings.telegram_restauration_topic_id}")
-    typer.echo(f"Topic général (résumés): {settings.telegram_general_topic_id}")
+    typer.echo(f"Topic général (résumés): {settings.telegram_group_id}")
     typer.echo(f"Heures communication: {settings.communication_hours}")
     typer.echo(f"Heures design: {settings.design_hours}")
     typer.echo(f"Heures restauration: {settings.restauration_hours}")
