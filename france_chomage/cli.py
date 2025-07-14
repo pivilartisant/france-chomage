@@ -211,15 +211,13 @@ def update():
 def db_init():
     """Initialize database tables"""
     
-    async def _init():
-        try:
-            await create_tables_if_not_exist()
-            typer.echo("✅ Base de données initialisée")
-        except Exception as exc:
-            typer.echo(f"❌ Erreur initialisation: {exc}")
-            raise typer.Exit(1)
-    
-    asyncio.run(_init())
+    try:
+        from france_chomage.database.migration_utils import create_tables_sync
+        create_tables_sync()
+        typer.echo("✅ Base de données initialisée")
+    except Exception as exc:
+        typer.echo(f"❌ Erreur initialisation: {exc}")
+        raise typer.Exit(1)
 
 @app.command()
 def db_migrate():

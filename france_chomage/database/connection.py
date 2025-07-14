@@ -64,5 +64,4 @@ async def get_session() -> AsyncSession:
     if async_session_factory is None:
         initialize_database()
     
-    async with async_session_factory() as session:
-        yield session
+    return async_session_factory()

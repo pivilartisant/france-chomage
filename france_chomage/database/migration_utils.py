@@ -77,8 +77,37 @@ async def migrate_all_json_files(session: AsyncSession) -> Dict[str, int]:
     
     return results
 
+def create_tables_sync():
+    """Create database tables synchronously to avoid event loop conflicts"""
+    import asyncio
+    from .models import Base
+    from . import connection
+    
+    def run_create_tables():
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            async def _create():
+                # Initialize database connection
+                connection.initialize_database()
+                
+                if connection.engine is None:
+                    raise RuntimeError("Database engine not properly initialized")
+                
+                # Create all tables
+                async with connection.engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.create_all)
+                
+                print("✅ Database tables created successfully")
+            
+            loop.run_until_complete(_create())
+        finally:
+            loop.close()
+    
+    run_create_tables()
+
 async def create_tables_if_not_exist():
-    """Create database tables if they don't exist"""
+    """Create database tables if they don't exist - async version"""
     from .models import Base
     from . import connection
     

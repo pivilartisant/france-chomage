@@ -23,7 +23,10 @@ sleep 5
 
 # Initialize database tables
 echo "🔧 Initializing database tables..."
-python -m france_chomage db-init
+python -m france_chomage db-init || {
+    echo "❌ Database initialization failed, trying alternative method..."
+    python -c "from france_chomage.database.migration_utils import create_tables_sync; create_tables_sync()"
+}
 
 # Check migration status
 echo "📊 Checking database status..."
