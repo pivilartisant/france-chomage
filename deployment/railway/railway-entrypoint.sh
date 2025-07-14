@@ -23,10 +23,57 @@ sleep 5
 
 # Initialize database tables
 echo "🔧 Initializing database tables..."
-python -m france_chomage db-init || {
-    echo "❌ Database initialization failed, trying alternative method..."
-    python -c "from france_chomage.database.migration_utils import create_tables_sync; create_tables_sync()"
+echo "🔍 Testing database connection first..."
+python -c "
+import os
+print(f'DATABASE_URL present: {bool(os.getenv(\"DATABASE_URL\"))}')
+print(f'DATABASE_URL starts with: {os.getenv(\"DATABASE_URL\", \"\")[:50]}...')
+"
+
+echo "🔧 Attempting database initialization..."
+python -m france_chomage db-init && echo "✅ db-init successful" || {
+    echo "❌ db-init failed, trying direct table creation..."
+    python -c "
+import traceback
+try:
+    from france_chomage.database.migration_utils import create_tables_sync
+    print('🔧 Running create_tables_sync...')
+    create_tables_sync()
+    print('✅ Direct table creation successful')
+except Exception as e:
+    print(f'❌ Direct table creation failed: {e}')
+    traceback.print_exc()
+    exit(1)
+"
 }
+
+echo "🔍 Verifying tables were created..."
+python -c "
+import asyncio
+from france_chomage.database.connection import initialize_database, engine
+
+async def check_tables():
+    initialize_database()
+    async with engine.begin() as conn:
+        result = await conn.execute(
+            text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\';')
+        )
+        tables = [row[0] for row in result]
+        print(f'📋 Tables found: {tables}')
+        if 'jobs' in tables:
+            print('✅ Jobs table exists!')
+        else:
+            print('❌ Jobs table missing!')
+            exit(1)
+
+from sqlalchemy import text
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+try:
+    loop.run_until_complete(check_tables())
+finally:
+    loop.close()
+"
 
 # Check migration status
 echo "📊 Checking database status..."
