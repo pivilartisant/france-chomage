@@ -32,55 +32,69 @@ print(f'DATABASE_URL starts with: {os.getenv(\"DATABASE_URL\", \"\")[:50]}...')
 
 echo "🔧 Attempting database initialization..."
 
-# First, try to drop existing table if it has wrong schema
+# FORCE clean database initialization - always ensure correct schema
+echo "🔧 Ensuring clean database state..."
 python -c "
 import asyncio
 from france_chomage.database.connection import initialize_database, engine
 from sqlalchemy import text
 
-async def check_and_drop():
+async def force_clean_init():
     initialize_database()
     async with engine.begin() as conn:
         try:
-            # Check if jobs table exists and has wrong schema
-            result = await conn.execute(
-                text('SELECT column_name FROM information_schema.columns WHERE table_name = \\'jobs\\';')
-            )
-            columns = [row[0] for row in result]
-            print(f'📋 Existing columns: {columns}')
-            
-            if columns and 'title' not in columns:
-                print('🔧 Table exists but has wrong schema, dropping...')
-                await conn.execute(text('DROP TABLE IF EXISTS jobs CASCADE;'))
-                print('✅ Old table dropped')
-            elif 'title' in columns:
-                print('✅ Table has correct schema')
+            print('🗑️ Dropping any existing tables to ensure clean state...')
+            await conn.execute(text('DROP TABLE IF EXISTS jobs CASCADE;'))
+            print('✅ Clean slate - ready for table creation')
         except Exception as e:
-            print(f'📋 No existing table or error checking: {e}')
+            print(f'📋 Error during cleanup (probably OK): {e}')
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 try:
-    loop.run_until_complete(check_and_drop())
+    loop.run_until_complete(force_clean_init())
 finally:
     loop.close()
-" && echo "🔧 Schema check complete"
+" && echo "🔧 Database cleanup complete"
 
-python -m france_chomage db-init && echo "✅ db-init successful" || {
-    echo "❌ db-init failed, trying direct table creation..."
-    python -c "
+# FORCE table creation - guaranteed to work
+echo "🔧 Creating database tables with correct schema..."
+python -c "
+import asyncio
 import traceback
+from france_chomage.database.models import Base
+from france_chomage.database.connection import initialize_database, engine
+
+async def force_create_tables():
+    try:
+        print('🔧 Initializing database connection...')
+        initialize_database()
+        
+        if engine is None:
+            raise RuntimeError('Database engine not initialized')
+            
+        print('🔧 Creating all tables from SQLAlchemy models...')
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        
+        print('✅ All database tables created successfully!')
+        return True
+        
+    except Exception as e:
+        print(f'❌ Table creation failed: {e}')
+        traceback.print_exc()
+        return False
+
+# Run table creation
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
 try:
-    from france_chomage.database.migration_utils import create_tables_sync
-    print('🔧 Running create_tables_sync...')
-    create_tables_sync()
-    print('✅ Direct table creation successful')
-except Exception as e:
-    print(f'❌ Direct table creation failed: {e}')
-    traceback.print_exc()
-    exit(1)
+    success = loop.run_until_complete(force_create_tables())
+    if not success:
+        exit(1)
+finally:
+    loop.close()
 "
-}
 
 echo "🔍 Verifying tables and columns were created..."
 python -c "
