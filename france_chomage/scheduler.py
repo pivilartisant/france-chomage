@@ -104,6 +104,10 @@ def sync_communication_jobs():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
         loop.run_until_complete(run_communication_jobs())
     finally:
         loop.close()
@@ -113,6 +117,10 @@ def sync_design_jobs():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
         loop.run_until_complete(run_design_jobs())
     finally:
         loop.close()
@@ -122,6 +130,10 @@ def sync_restauration_jobs():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
         loop.run_until_complete(run_restauration_jobs())
     finally:
         loop.close()
@@ -131,6 +143,10 @@ def sync_update_summary():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
         loop.run_until_complete(send_update_summary())
     finally:
         loop.close()
