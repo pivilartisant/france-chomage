@@ -36,12 +36,14 @@ echo "🔧 Attempting database initialization..."
 echo "🔧 Ensuring clean database state..."
 python -c "
 import asyncio
-from france_chomage.database.connection import initialize_database, engine
+from france_chomage.database import connection
 from sqlalchemy import text
 
 async def force_clean_init():
-    initialize_database()
-    async with engine.begin() as conn:
+    connection.initialize_database()
+    if connection.engine is None:
+        raise RuntimeError('Database engine not initialized')
+    async with connection.engine.begin() as conn:
         try:
             print('🗑️ Dropping any existing tables to ensure clean state...')
             await conn.execute(text('DROP TABLE IF EXISTS jobs CASCADE;'))
@@ -63,18 +65,18 @@ python -c "
 import asyncio
 import traceback
 from france_chomage.database.models import Base
-from france_chomage.database.connection import initialize_database, engine
+from france_chomage.database import connection
 
 async def force_create_tables():
     try:
         print('🔧 Initializing database connection...')
-        initialize_database()
+        connection.initialize_database()
         
-        if engine is None:
+        if connection.engine is None:
             raise RuntimeError('Database engine not initialized')
             
         print('🔧 Creating all tables from SQLAlchemy models...')
-        async with engine.begin() as conn:
+        async with connection.engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
         
         print('✅ All database tables created successfully!')
@@ -99,11 +101,12 @@ finally:
 echo "🔍 Verifying tables and columns were created..."
 python -c "
 import asyncio
-from france_chomage.database.connection import initialize_database, engine
+from france_chomage.database import connection
+from sqlalchemy import text
 
 async def check_tables():
-    initialize_database()
-    async with engine.begin() as conn:
+    connection.initialize_database()
+    async with connection.engine.begin() as conn:
         # Check tables
         result = await conn.execute(
             text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\';')
@@ -134,7 +137,6 @@ async def check_tables():
             print('❌ Jobs table missing!')
             exit(1)
 
-from sqlalchemy import text
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 try:
