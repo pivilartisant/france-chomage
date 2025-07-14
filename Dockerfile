@@ -32,14 +32,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Database initialization scripts
-COPY deployment/docker/docker-entrypoint.sh /entrypoint.sh
+COPY deployment/docker/docker-entrypoint.sh /docker-entrypoint.sh
 COPY deployment/railway/railway-entrypoint.sh /railway-entrypoint.sh
-RUN chmod +x /entrypoint.sh /railway-entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh /docker-entrypoint.sh /railway-entrypoint.sh
 
 # Health check - includes database connectivity
 HEALTHCHECK --interval=300s --timeout=30s --start-period=60s --retries=3 \
     CMD python -c "from france_chomage.config import settings; from france_chomage.database import job_manager; print('Health check OK')" || exit 1
 
-# Default command - Railway vs Docker Compose detection  
-ENTRYPOINT ["/bin/bash", "-c", "if [ \"$RAILWAY_ENVIRONMENT\" ] || [ \"$RAILWAY_PUBLIC_DOMAIN\" ] || [ \"$RAILWAY_PROJECT_ID\" ] || [ \"$FORCE_RAILWAY_ENTRYPOINT\" ]; then echo '🚂 Using Railway entrypoint'; exec /railway-entrypoint.sh \"$@\"; else echo '🐳 Using Docker entrypoint'; exec /entrypoint.sh \"$@\"; fi", "--"]
+# Default command - Use universal entrypoint
+ENTRYPOINT ["/entrypoint.sh"]
 CMD ["python", "-m", "france_chomage", "scheduler"]
