@@ -1,7 +1,7 @@
 # France Chômage Bot - Agent Guide
 
 ## Project Overview
-A French Telegram bot that scrapes job offers for communication, design, and restaurant jobs, then automatically posts them to specific Telegram topics.
+A French Telegram bot that scrapes job offers for communication, design, and restaurant jobs, then automatically posts them to specific Telegram topics. Now features PostgreSQL database storage with automatic duplicate detection and 30-day job filtering.
 
 ## Tech Stack
 - **Python 3.x** with modern typing
@@ -12,6 +12,9 @@ A French Telegram bot that scrapes job offers for communication, design, and res
 - **schedule** (1.2.0) - Job scheduling
 - **typer** (0.9.0) - CLI framework
 - **pytest** (7.4.3) - Testing framework
+- **SQLAlchemy** (2.0.23) - Database ORM
+- **asyncpg** (0.29.0) - PostgreSQL async driver
+- **alembic** (1.13.1) - Database migrations
 
 ## Key Commands
 
@@ -44,12 +47,12 @@ make clean
 
 ### Application Usage
 ```bash
-# Scraping only (saves to jobs_*.json)
+# Scraping only (saves to database)
 python -m france_chomage scrape communication
 python -m france_chomage scrape design
 python -m france_chomage scrape restauration
 
-# Send only (reads from jobs_*.json)
+# Send only (reads from database, new jobs only)
 python -m france_chomage send communication
 python -m france_chomage send design
 python -m france_chomage send restauration
@@ -72,6 +75,25 @@ python -m france_chomage test
 make test-config
 ```
 
+### Database Management
+```bash
+# Initialize database tables
+make db-init
+python -m france_chomage db-init
+
+# Migrate JSON files to database
+make db-migrate
+python -m france_chomage db-migrate
+
+# Show database status
+make db-status
+python -m france_chomage db-status
+
+# Clean up old jobs (90+ days)
+make db-cleanup
+python -m france_chomage db-cleanup
+```
+
 ### Docker
 ```bash
 # Build image
@@ -90,6 +112,7 @@ france_chomage/
 ├── scheduler.py         # Main scheduler
 ├── cli.py               # CLI interface
 ├── models/job.py        # Job model with validation
+├── database/            # Database models & repositories
 ├── scraping/            # Scrapers (communication, design, restauration)
 ├── telegram/bot.py      # Telegram bot
 └── tests/               # Test files

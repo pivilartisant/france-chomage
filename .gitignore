@@ -26,6 +26,7 @@ htmlcov/
 *.swp
 *.swo
 *~
+
 # Documentation is now in docs/ folder
 
 # OS

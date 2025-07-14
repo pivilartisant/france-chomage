@@ -42,12 +42,9 @@ DB_ECHO=false
    python -m france_chomage db-status
    ```
 
-## For Development Without PostgreSQL
+## PostgreSQL Required
 
-If you don't have PostgreSQL installed, the system will:
-- Fall back to JSON files for data storage
-- Print warning messages but continue working
-- Allow you to set up the database later
+PostgreSQL is required for the application to function. The system no longer falls back to JSON files. If you don't have PostgreSQL installed, please install it using the commands above.
 
 ## SQLite Alternative (Future)
 
@@ -64,7 +61,7 @@ After database setup, the improved workflow is:
    - Scrapes jobs from sites
    - Filters jobs to last 30 days only
    - Removes duplicates automatically
-   - Saves to database + JSON backup
+   - Saves to database
 
 2. **Sending**: `python -m france_chomage send communication`
    - Loads unsent jobs from database (last 30 days)
