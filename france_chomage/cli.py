@@ -116,7 +116,7 @@ def scheduler():
     from france_chomage.scheduler import main
     
     print("🚀 Lancement du scheduler principal")
-    asyncio.run(main())
+    main()  # Now synchronous
 
 @app.command()
 def info():
