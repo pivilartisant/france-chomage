@@ -2,88 +2,105 @@
 
 Bot Telegram automatisé pour scraper et publier les offres d'emploi en communication, design et restauration.
 
-## 📁 Structure du projet
+## 🚀 Quick Deploy
+
+### Railway (Recommended - 1 Click)
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/deploy)
+
+### Docker Compose (Local/VPS)
+```bash
+make docker-up
+```
+
+## 📁 Project Structure
 
 ```
 france-chomage/
-├── france_chomage/           # Package principal
-│   ├── config.py            # Configuration centralisée
-│   ├── scheduler.py         # Scheduler principal
-│   ├── cli.py               # Interface CLI
-│   ├── models/job.py        # Modèle Job avec validation
-│   ├── scraping/            # Scrapers (communication, design)
-│   └── telegram/bot.py      # Bot Telegram
-├── requirements.txt
-└── .env                     # Configuration
+├── france_chomage/           # Main application package
+│   ├── database/            # PostgreSQL models & repositories  
+│   ├── scraping/            # Job scrapers (communication, design, restauration)
+│   ├── telegram/            # Telegram bot
+│   └── models/              # Data models
+├── deployment/              # Deployment configurations
+│   ├── docker/             # Docker Compose setup
+│   └── railway/            # Railway cloud deployment
+├── docs/                   # Documentation
+├── alembic/               # Database migrations
+└── requirements.txt       # Python dependencies
 ```
 
-## ⚡ Utilisation
+## ⚡ Usage
 
-### 📡 Commandes de Scraping
+### 🗄️ Database Setup (First Time)
 ```bash
-# Scraping seulement (sauvegarde dans jobs_*.json)
+# Initialize database tables
+make db-init
+
+# Migrate existing JSON data (if any)
+make db-migrate
+```
+
+### 📡 Job Scraping
+```bash
+# Scrape jobs (saves to database + filters duplicates)
 python -m france_chomage scrape communication
 python -m france_chomage scrape design
 python -m france_chomage scrape restauration
 ```
 
-### 📤 Commandes d'Envoi
+### 📤 Send to Telegram
 ```bash
-# Envoi seulement (lit depuis jobs_*.json)
+# Send only NEW jobs from database (dd/mm/yyyy format)
 python -m france_chomage send communication
-python -m france_chomage send design  
+python -m france_chomage send design
 python -m france_chomage send restauration
 ```
 
-### 🔄 Workflow Complet
+### 🔄 Complete Workflow
 ```bash
-# Scrape + Envoi automatique
+# Scrape + Send new jobs only
 python -m france_chomage workflow communication
 python -m france_chomage workflow design
 python -m france_chomage workflow restauration
 ```
 
-### 🤖 Automatisation
+### 🤖 Automated Scheduling
 ```bash
-# Scheduler automatique (lance les workflows selon planning)
+# Run scheduler (automated workflows)
 python -m france_chomage scheduler
 
-# Envoie un résumé de statut vers le topic général
-python -m france_chomage update
+# Database status
+make db-status
 
-# Informations de configuration
+# Configuration info
 python -m france_chomage info
 ```
 
-### 💡 Exemples d'Usage
+## ✨ Key Features
 
-**Utilisation séparée :**
-```bash
-# 1. Scraper uniquement (pour tester/debug)
-python -m france_chomage scrape design
-# Génère: jobs_design.json
+### 🎯 **Smart Job Processing**
+- **30-day filtering**: Only recent, relevant jobs
+- **Duplicate removal**: No more repeated job postings  
+- **Auto-deduplication**: Across different job sites
+- **Incremental updates**: Only new jobs are sent
 
-# 2. Envoyer plus tard (par exemple après vérification manuelle)
-python -m france_chomage send design
-```
+### 📅 **Improved User Experience**
+- **French date format**: dd/mm/yyyy in Telegram messages
+- **Clean formatting**: Better readability
+- **Fresh content**: Only jobs posted in last 30 days
+- **No spam**: Duplicate jobs automatically filtered
 
-**Workflow automatique :**
-```bash
-# Tout en une commande
-python -m france_chomage workflow restauration
-```
+### 🗄️ **Database-Powered**
+- **PostgreSQL storage**: Reliable, scalable data management
+- **Fast queries**: Indexed for performance
+- **Data integrity**: Proper validation and constraints
+- **Backup ready**: Easy export/import capabilities
 
-**Planning automatisé :**
-- Communication: 17:00
-- Design: 18:00  
-- Restauration: 19:00
-- Résumé général: automatique après chaque workflow
-
-**Résumés automatiques :**
-Le bot envoie automatiquement un résumé vers le topic général (ID: 1) avec:
-- Nombre d'offres par catégorie
-- Heure de dernière mise à jour
-- Erreurs éventuelles
+### 🤖 **Automated Scheduling**
+- **Communication**: 17:00 daily
+- **Design**: 18:00 daily  
+- **Restaurant**: 19:00 daily
+- **Auto-summary**: Status updates after each run
 
 ## ⚙️ Configuration (.env)
 
@@ -101,74 +118,13 @@ LOCATION=Paris
 SKIP_INIT_JOB=0
 ```
 
-## 🐳 Docker
+## 📚 Documentation
 
-```bash
-# Build image
-docker build -t france-chomage-bot .
+- **[📖 Complete Documentation](docs/)** - All guides and references
+- **[🚀 Deployment Guide](docs/DEPLOYMENT_README.md)** - Choose your deployment method
+- **[👨‍💻 Development Guide](docs/AGENT.md)** - Setup for developers
+- **[🗄️ Database Setup](docs/DATABASE_SETUP.md)** - Database configuration
 
-# Run with environment file
-docker run --env-file .env france-chomage-bot
-```
+## 🔧 Development
 
-## 🔧 Ajouter une Nouvelle Catégorie
-
-Pour ajouter une nouvelle catégorie (ex: "marketing"), suivez ces étapes:
-
-### 1. Créer le Scraper
-```bash
-# Créer france_chomage/scraping/marketing.py
-```
-```python
-from .base import ScraperBase
-
-class MarketingScraper(ScraperBase):
-    search_terms = "marketing OR growth OR acquisition"
-    filename_prefix = "marketing"
-    job_type = "marketing"
-```
-
-### 2. Mettre à Jour les Imports
-```python
-# Dans france_chomage/scraping/__init__.py
-from .marketing import MarketingScraper
-__all__ = [..., "MarketingScraper"]
-```
-
-### 3. Ajouter la Configuration
-```python
-# Dans france_chomage/config.py
-self.telegram_marketing_topic_id = int(os.getenv("TELEGRAM_MARKETING_TOPIC_ID", "60"))
-self.marketing_hours = [20]
-```
-
-### 4. Mettre à Jour le CLI
-```python
-# Dans france_chomage/cli.py - ajouter dans chaque command:
-elif domain == "marketing":
-    scraper = MarketingScraper()
-    topic_id = settings.telegram_marketing_topic_id
-```
-
-### 5. Mettre à Jour le Scheduler
-```python
-# Dans france_chomage/scheduler.py
-def run_marketing_jobs():
-    # Copier la structure de run_design_jobs()
-    
-# Ajouter la programmation:
-for hour in settings.marketing_hours:
-    schedule.every().day.at(f"{hour:02d}:00").do(run_marketing_jobs)
-```
-
-### 6. Variables d'Environnement
-```env
-# Ajouter dans .env
-TELEGRAM_MARKETING_TOPIC_ID=60
-```
-
-### 7. Test
-```bash
-python -m france_chomage scrape marketing
-python -m france_chomage workflow marketing
-```
+For development instructions and adding new job categories, see **[Development Guide](docs/AGENT.md)**.

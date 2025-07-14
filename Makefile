@@ -56,15 +56,66 @@ validate-config: ## Valide la configuration des topics
 	@echo "🔍 Validation de la configuration des topics:"
 	@python -c "from france_chomage.config import settings; print(f'✅ Communication topic: {settings.communication_topic_id}'); print(f'✅ Design topic: {settings.design_topic_id}'); print('✅ Configuration valide - topics séparés OK')"
 
+# Database commands
+db-init: ## Initialize database tables
+	python -m france_chomage db-init
+
+db-migrate: ## Migrate JSON files to database
+	python -m france_chomage db-migrate
+
+db-status: ## Show database status
+	python -m france_chomage db-status
+
+db-cleanup: ## Clean up old jobs (90+ days)
+	python -m france_chomage db-cleanup
+
+# Railway deployment
+railway-deploy: ## Deploy to Railway (requires Railway CLI)
+	railway up
+
+railway-logs: ## Show Railway logs
+	railway logs
+
+railway-status: ## Show Railway deployment status
+	railway status
+
+railway-vars: ## Show Railway environment variables
+	railway variables
+
 # Docker
 docker-build: ## Build l'image Docker
 	docker build -t france-chomage-bot .
 
-docker-run: ## Lance le container Docker
+docker-run: ## Lance le container Docker (standalone)
 	docker run --env-file .env france-chomage-bot
 
-docker-test: ## Test avec Docker
+docker-test: ## Test avec Docker (standalone)
 	docker run --env-file .env france-chomage-bot python -m france_chomage info
+
+# Docker Compose (recommended for production)
+docker-up: ## Start services with database
+	cd deployment/docker && docker-compose up -d
+
+docker-down: ## Stop all services
+	cd deployment/docker && docker-compose down
+
+docker-logs: ## Show application logs
+	cd deployment/docker && docker-compose logs -f app
+
+docker-db-logs: ## Show database logs
+	cd deployment/docker && docker-compose logs -f db
+
+docker-admin: ## Start with database admin interface
+	cd deployment/docker && docker-compose --profile admin up -d
+
+docker-rebuild: ## Rebuild and restart
+	cd deployment/docker && docker-compose down
+	cd deployment/docker && docker-compose build --no-cache
+	cd deployment/docker && docker-compose up -d
+
+docker-clean: ## Clean up containers and volumes
+	cd deployment/docker && docker-compose down -v
+	docker system prune -f
 
 # Développement
 dev-install: ## Installation pour développement

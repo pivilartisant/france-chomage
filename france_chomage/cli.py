@@ -8,6 +8,13 @@ from france_chomage.config import settings
 from france_chomage.scraping import CommunicationScraper, DesignScraper, RestaurationScraper
 from france_chomage.telegram.bot import telegram_bot
 from france_chomage.environments import detect_environment
+from france_chomage.database import (
+    create_tables_if_not_exist, 
+    migrate_all_json_files, 
+    get_migration_status, 
+    print_migration_status,
+    job_manager
+)
 
 app = typer.Typer(help="🇫🇷 France Chômage Bot - CLI unifié")
 
@@ -46,35 +53,24 @@ def send(
     
     async def _send():
         if domain == "communication":
-            scraper = CommunicationScraper()
             topic_id = settings.telegram_communication_topic_id
         elif domain == "design":
-            scraper = DesignScraper()
             topic_id = settings.telegram_design_topic_id
         elif domain == "restauration":
-            scraper = RestaurationScraper()
             topic_id = settings.telegram_restauration_topic_id
         else:
             typer.echo(f"❌ Domaine inconnu: {domain}")
             raise typer.Exit(1)
         
-        # Charge les jobs depuis le fichier
-        jobs = scraper.load_jobs()
+        print(f"📤 Envoi des nouvelles offres {domain} depuis la base de données")
         
-        if not jobs:
-            typer.echo(f"❌ Aucune offre trouvée pour {domain}")
-            typer.echo(f"Lancez d'abord: python -m france_chomage scrape {domain}")
-            raise typer.Exit(1)
-        
-        print(f"📤 Envoi de {len(jobs)} offres {domain} vers Telegram")
-        
-        sent_count = await telegram_bot.send_jobs(
-            jobs=jobs,
-            topic_id=topic_id,
-            job_type=domain
+        # Send jobs from database (only unsent jobs from last 30 days)
+        sent_count = await telegram_bot.send_jobs_from_database(
+            category=domain,
+            topic_id=topic_id
         )
         
-        typer.echo(f"✅ {sent_count}/{len(jobs)} offres envoyées")
+        typer.echo(f"✅ {sent_count} nouvelles offres envoyées")
     
     asyncio.run(_send())
 
@@ -102,18 +98,15 @@ def workflow(
         print(f"🔄 Workflow complet {domain}")
         jobs = await scraper.scrape()
         
-        if not jobs:
-            typer.echo(f"❌ Aucune offre trouvée pour {domain}")
-            return
+        print(f"📊 {len(jobs)} offres scrapées")
         
-        # Envoi
-        sent_count = await telegram_bot.send_jobs(
-            jobs=jobs,
-            topic_id=topic_id,
-            job_type=domain
+        # Envoi des nouvelles offres depuis la base de données
+        sent_count = await telegram_bot.send_jobs_from_database(
+            category=domain,
+            topic_id=topic_id
         )
         
-        typer.echo(f"✅ Workflow terminé: {sent_count}/{len(jobs)} offres envoyées")
+        typer.echo(f"✅ Workflow terminé: {sent_count} nouvelles offres envoyées")
     
     asyncio.run(_workflow())
 
@@ -212,6 +205,89 @@ def update():
             typer.echo("⚠️ Aucune donnée à envoyer")
     
     asyncio.run(_update())
+
+# Database management commands
+@app.command()
+def db_init():
+    """Initialize database tables"""
+    
+    async def _init():
+        try:
+            await create_tables_if_not_exist()
+            typer.echo("✅ Base de données initialisée")
+        except Exception as exc:
+            typer.echo(f"❌ Erreur initialisation: {exc}")
+            raise typer.Exit(1)
+    
+    asyncio.run(_init())
+
+@app.command()
+def db_migrate():
+    """Migrate existing JSON files to database"""
+    
+    async def _migrate():
+        try:
+            # Initialize database first
+            await create_tables_if_not_exist()
+            
+            # Migrate JSON files
+            from france_chomage.database import connection
+            connection.initialize_database()
+            
+            if connection.async_session_factory is None:
+                raise RuntimeError("Database not properly initialized")
+            
+            async with connection.async_session_factory() as session:
+                results = await migrate_all_json_files(session)
+            
+            typer.echo("✅ Migration terminée:")
+            for category, count in results.items():
+                typer.echo(f"  - {category}: {count} jobs migrés")
+                
+        except Exception as exc:
+            typer.echo(f"❌ Erreur migration: {exc}")
+            raise typer.Exit(1)
+    
+    asyncio.run(_migrate())
+
+@app.command()
+def db_status():
+    """Show database status and statistics"""
+    
+    async def _status():
+        try:
+            from france_chomage.database import connection
+            connection.initialize_database()
+            
+            if connection.async_session_factory is None:
+                raise RuntimeError("Database not properly initialized")
+            
+            async with connection.async_session_factory() as session:
+                stats = await get_migration_status(session)
+            
+            print_migration_status(stats)
+            
+        except Exception as exc:
+            typer.echo(f"❌ Erreur lecture status: {exc}")
+            raise typer.Exit(1)
+    
+    asyncio.run(_status())
+
+@app.command()
+def db_cleanup(
+    days: int = typer.Option(90, help="Days to keep (default: 90)")
+):
+    """Clean up old jobs from database"""
+    
+    async def _cleanup():
+        try:
+            removed_count = await job_manager.cleanup_old_jobs(days)
+            typer.echo(f"✅ {removed_count} anciens jobs supprimés (>{days} jours)")
+        except Exception as exc:
+            typer.echo(f"❌ Erreur nettoyage: {exc}")
+            raise typer.Exit(1)
+    
+    asyncio.run(_cleanup())
 
 if __name__ == "__main__":
     app()

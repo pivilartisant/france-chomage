@@ -21,20 +21,15 @@ def run_communication_jobs():
             scraper = CommunicationScraper()
             jobs = await scraper.scrape()
             
-            if not jobs:
-                print("⚠️ Aucune offre communication trouvée")
-                return
+            print(f"📦 {len(jobs)} offres scrapées")
             
-            print(f"📦 {len(jobs)} offres trouvées")
-            
-            print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_communication_topic_id,
-                job_type="communication"
+            print("📤 Envoi nouvelles offres vers Telegram...")
+            sent_count = await telegram_bot.send_jobs_from_database(
+                category="communication",
+                topic_id=settings.telegram_communication_topic_id
             )
             
-            print(f"✅ {sent_count} offres communication envoyées")
+            print(f"✅ {sent_count} nouvelles offres communication envoyées")
             
             # Sauvegarder les stats
             job_stats['communication'] = {'jobs_sent': sent_count}
@@ -56,20 +51,15 @@ def run_design_jobs():
             scraper = DesignScraper()
             jobs = await scraper.scrape()
             
-            if not jobs:
-                print("⚠️ Aucune offre design trouvée")
-                return
-            
-            print(f"📦 {len(jobs)} offres trouvées")
+            print(f"📦 {len(jobs)} offres scrapées")
             
             print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_design_topic_id,
-                job_type="design"
+            sent_count = await telegram_bot.send_jobs_from_database(
+                category="design",
+                topic_id=settings.telegram_design_topic_id
             )
             
-            print(f"✅ {sent_count} offres design envoyées")
+            print(f"✅ {sent_count} nouvelles offres design envoyées")
             
             # Sauvegarder les stats
             job_stats['design'] = {'jobs_sent': sent_count}
@@ -91,20 +81,15 @@ def run_restauration_jobs():
             scraper = RestaurationScraper()
             jobs = await scraper.scrape()
             
-            if not jobs:
-                print("⚠️ Aucune offre restauration trouvée")
-                return
-            
-            print(f"📦 {len(jobs)} offres trouvées")
+            print(f"📦 {len(jobs)} offres scrapées")
             
             print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_restauration_topic_id,
-                job_type="restauration"
+            sent_count = await telegram_bot.send_jobs_from_database(
+                category="restauration",
+                topic_id=settings.telegram_restauration_topic_id
             )
             
-            print(f"✅ {sent_count} offres restauration envoyées")
+            print(f"✅ {sent_count} nouvelles offres restauration envoyées")
             
             # Sauvegarder les stats
             job_stats['restauration'] = {'jobs_sent': sent_count}

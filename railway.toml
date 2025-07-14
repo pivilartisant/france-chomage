@@ -5,3 +5,13 @@ builder = "dockerfile"
 startCommand = "python -m france_chomage scheduler"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 10
+
+[variables]
+# Database will be automatically provided by Railway PostgreSQL service
+# TELEGRAM configuration should be set in Railway dashboard
+DOCKER_ENV = "true"
+FORCE_DOCKER_MODE = "1"
+RESULTS_WANTED = "20"
+LOCATION = "Paris"
+MAX_RETRIES = "3"
+INDEED_MAX_RESULTS = "5"
