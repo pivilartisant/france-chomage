@@ -40,16 +40,28 @@ def create_engine():
         pool_size=10,       # Increased pool size for concurrent operations
         max_overflow=20,    # Increased overflow for peak loads
         pool_timeout=60,    # Increased timeout for busy periods
+        # Additional connection stability settings
+        connect_args={
+            "server_settings": {
+                "application_name": "france_chomage_bot",
+                "jit": "off",
+            }
+        }
     )
 
 # Global engine and session factory (will be initialized later)
 engine = None
 async_session_factory = None
 
-def initialize_database():
+def initialize_database(force_reinit: bool = False):
     """Initialize database engine and session factory"""
     global engine, async_session_factory
-    if engine is None:
+    
+    if engine is None or force_reinit:
+        if engine is not None:
+            # Clean up existing engine
+            engine.dispose()
+        
         engine = create_engine()
         async_session_factory = async_sessionmaker(
             engine, 

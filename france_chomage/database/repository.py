@@ -16,27 +16,31 @@ class JobRepository:
     
     async def create_job(self, job_data: PydanticJob, category: str) -> DBJob:
         """Create a new job in the database"""
-        # Convert Pydantic model to SQLAlchemy model
-        db_job = DBJob(
-            title=job_data.title,
-            company=job_data.company,
-            location=job_data.location,
-            date_posted=datetime.strptime(job_data.date_posted, "%Y-%m-%d").date(),
-            job_url=job_data.job_url,
-            site=job_data.site,
-            salary_source=job_data.salary_source,
-            description=job_data.description,
-            is_remote=job_data.is_remote,
-            job_type=job_data.job_type,
-            company_industry=job_data.company_industry,
-            experience_range=job_data.experience_range,
-            category=category,
-        )
-        
-        self.session.add(db_job)
-        await self.session.commit()
-        await self.session.refresh(db_job)
-        return db_job
+        try:
+            # Convert Pydantic model to SQLAlchemy model
+            db_job = DBJob(
+                title=job_data.title,
+                company=job_data.company,
+                location=job_data.location,
+                date_posted=datetime.strptime(job_data.date_posted, "%Y-%m-%d").date(),
+                job_url=job_data.job_url,
+                site=job_data.site,
+                salary_source=job_data.salary_source,
+                description=job_data.description,
+                is_remote=job_data.is_remote,
+                job_type=job_data.job_type,
+                company_industry=job_data.company_industry,
+                experience_range=job_data.experience_range,
+                category=category,
+            )
+            
+            self.session.add(db_job)
+            await self.session.commit()
+            await self.session.refresh(db_job)
+            return db_job
+        except Exception as e:
+            await self.session.rollback()
+            raise e
     
     async def job_exists(self, job_url: str) -> bool:
         """Check if a job already exists by URL"""
@@ -83,16 +87,20 @@ class JobRepository:
         if not job_ids:
             return 0
         
-        # Update multiple jobs at once
-        from sqlalchemy import update
-        stmt = update(DBJob).where(DBJob.id.in_(job_ids)).values(
-            sent_to_telegram=True,
-            sent_at=datetime.utcnow()
-        )
-        
-        result = await self.session.execute(stmt)
-        await self.session.commit()
-        return result.rowcount
+        try:
+            # Update multiple jobs at once
+            from sqlalchemy import update
+            stmt = update(DBJob).where(DBJob.id.in_(job_ids)).values(
+                sent_to_telegram=True,
+                sent_at=datetime.utcnow()
+            )
+            
+            result = await self.session.execute(stmt)
+            await self.session.commit()
+            return result.rowcount
+        except Exception as e:
+            await self.session.rollback()
+            raise e
     
     async def search_similar_jobs(
         self, 
