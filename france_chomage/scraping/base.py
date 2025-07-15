@@ -54,9 +54,9 @@ class ScraperBase(ABC):
         if 'indeed' in sites:
             print("⚠️ Indeed inclus - Risque de blocage 403 élevé")
         if env_type == 'Local' and len(sites) > 1:
-            print("🏠 Mode Local détecté - Indeed + LinkedIn (plus de risques)")
+            print("🏠 Mode Local détecté - Indeed + LinkedIn (fallback automatique)")
         elif env_type == 'Docker':
-            print("🐳 Mode Docker détecté - LinkedIn uniquement (plus stable)")
+            print("🐳 Mode Docker détecté - Indeed + LinkedIn (fallback automatique)")
         
         for attempt in range(1, settings.max_retries + 1):
             try:

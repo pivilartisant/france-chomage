@@ -21,8 +21,8 @@ The bot uses a **base scraper architecture** with specialized scrapers for each 
 - **And 44 more categories** covering all job sectors from agriculture to finance
 
 ### 3. Environment Detection
-- **Local mode**: Uses both Indeed + LinkedIn (higher risk of blocks)
-- **Docker mode**: LinkedIn only (more stable)
+- **Local mode**: Uses both Indeed + LinkedIn with automatic fallback
+- **Docker mode**: Uses both Indeed + LinkedIn with automatic fallback
 - **Auto-detection** via `/.dockerenv`, `/proc/1/cgroup`, or env variables
 
 ## Scraping Process
@@ -30,8 +30,8 @@ The bot uses a **base scraper architecture** with specialized scrapers for each 
 ### 1. Site Strategy
 ```python
 # Environment-based site selection
-Local: ["indeed", "linkedin"]    # All sites
-Docker: ["linkedin"]             # LinkedIn only for stability
+Local: ["indeed", "linkedin"]    # All sites with fallback
+Docker: ["indeed", "linkedin"]   # Indeed + LinkedIn with automatic fallback
 ```
 
 ### 2. Anti-Detection Features

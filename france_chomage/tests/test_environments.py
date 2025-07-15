@@ -62,7 +62,7 @@ class TestEnvironments:
         mock_detect.return_value = Environment.DOCKER
         
         sites = get_sites_for_environment()
-        assert sites == ("linkedin",)
+        assert sites == ("indeed", "linkedin")
     
     @patch('france_chomage.environments.detect_environment')
     def test_get_sites_for_local(self, mock_detect):
@@ -89,7 +89,7 @@ class TestEnvironments:
     def test_site_strategy_enum(self):
         """Test énumération SiteStrategy"""
         assert SiteStrategy.LOCAL.value == ("indeed", "linkedin")
-        assert SiteStrategy.DOCKER.value == ("linkedin",)
+        assert SiteStrategy.DOCKER.value == ("indeed", "linkedin")
     
     def test_environment_enum(self):
         """Test énumération Environment"""
