@@ -5,9 +5,8 @@ import json
 import asyncio
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import Dict, Any
 from sqlalchemy.ext.asyncio import AsyncSession
-from .models import Job as DBJob
 from .repository import JobRepository
 from ..models import Job as PydanticJob
 

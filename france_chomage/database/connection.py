@@ -4,7 +4,6 @@ Database connection and session management
 import os
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.engine import URL
-from france_chomage.config import settings
 
 def get_database_url() -> str:
     """Get database URL from environment variables"""

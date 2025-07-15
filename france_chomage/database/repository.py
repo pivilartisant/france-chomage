@@ -2,7 +2,7 @@
 Job repository for database operations
 """
 from datetime import date, datetime, timedelta
-from typing import List, Optional
+from typing import List
 from sqlalchemy import select, and_, or_, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from .models import Job as DBJob

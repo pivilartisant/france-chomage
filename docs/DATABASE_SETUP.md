@@ -28,7 +28,7 @@ DB_ECHO=false
 python -m france_chomage db init
    ```
 
-2. **Migrate existing JSON data**:
+2. **Migrate existing JSON data** (if migrating from old system):
    ```bash
    make db-migrate
 # or
@@ -44,7 +44,7 @@ python -m france_chomage db status
 
 ## PostgreSQL Required
 
-PostgreSQL is required for the application to function. The system no longer falls back to JSON files. If you don't have PostgreSQL installed, please install it using the commands above.
+PostgreSQL is required for the application to function. The system no longer uses JSON files for storage. Install PostgreSQL using your system's package manager or download from https://postgresql.org/download/.
 
 ## SQLite Alternative (Future)
 

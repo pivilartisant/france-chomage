@@ -1,9 +1,8 @@
 """
 Database manager for job operations with caching and filtering
 """
-import asyncio
 from datetime import date, datetime, timedelta
-from typing import List, Optional, Set
+from typing import List, Set
 from sqlalchemy.ext.asyncio import AsyncSession
 from .models import Job as DBJob
 from .repository import JobRepository
