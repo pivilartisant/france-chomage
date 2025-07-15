@@ -194,19 +194,42 @@ def print_migration_status(stats: Dict[str, Any]):
     print("📊 DATABASE MIGRATION STATUS")
     print("="*50)
     
+    # Separate categories with jobs from empty ones
+    active_categories = []
+    empty_categories = []
+    
     for category, data in stats.items():
         if category == "overall":
             continue
-            
-        print(f"\n🏷️ {category.upper()}")
-        print(f"   Total jobs: {data['total_jobs']}")
-        print(f"   Recent (30 days): {data['recent_jobs_30_days']}")
-        print(f"   Unsent jobs: {data['unsent_jobs']}")
-        print(f"   Latest job: {data['latest_job_date']}")
+        
+        if data['total_jobs'] > 0:
+            active_categories.append((category, data))
+        else:
+            empty_categories.append(category)
     
+    # Show active categories
+    if active_categories:
+        print(f"\n🟢 ACTIVE CATEGORIES ({len(active_categories)} with jobs)")
+        for category, data in active_categories:
+            print(f"\n🏷️ {category.upper()}")
+            print(f"   Total jobs: {data['total_jobs']}")
+            print(f"   Recent (30 days): {data['recent_jobs_30_days']}")
+            print(f"   Unsent jobs: {data['unsent_jobs']}")
+            print(f"   Latest job: {data['latest_job_date']}")
+    
+    # Show summary of empty categories
+    if empty_categories:
+        print(f"\n⚪ EMPTY CATEGORIES ({len(empty_categories)} with no jobs)")
+        print(f"   Categories: {', '.join(empty_categories[:10])}")
+        if len(empty_categories) > 10:
+            print(f"   ... and {len(empty_categories) - 10} more")
+    
+    # Overall stats
     if "overall" in stats:
         overall = stats["overall"]
         print(f"\n📈 OVERALL STATS (Last 30 days)")
+        print(f"   Total categories: {len(active_categories) + len(empty_categories)}")
+        print(f"   Active categories: {len(active_categories)}")
         print(f"   Total jobs: {overall['total_jobs']}")
         print(f"   Sent to Telegram: {overall['sent_jobs']}")
         print(f"   Pending: {overall['unsent_jobs']}")

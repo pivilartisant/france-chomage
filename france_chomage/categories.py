@@ -92,7 +92,6 @@ class CategoryManager:
             
             self._validate_configuration()
             self._loaded = True
-            print(f"✅ Loaded {len(self._categories)} categories from {config_file}")
             
         except yaml.YAMLError as e:
             raise ValueError(f"Invalid YAML in configuration file: {e}")
@@ -118,16 +117,10 @@ class CategoryManager:
                 all_scrape_hours.extend(cat.scrape_hours)
                 all_send_hours.extend(cat.send_hours)
         
-        if len(all_scrape_hours) != len(set(all_scrape_hours)):
-            duplicates = [hour for hour in set(all_scrape_hours) if all_scrape_hours.count(hour) > 1]
-            print(f"⚠️ Warning: Multiple categories scheduled to scrape at same hour: {duplicates}")
-        
-        if len(all_send_hours) != len(set(all_send_hours)):
-            duplicates = [hour for hour in set(all_send_hours) if all_send_hours.count(hour) > 1]
-            print(f"⚠️ Warning: Multiple categories scheduled to send at same hour: {duplicates}")
+        # Note: Multiple categories can be scheduled at same hours - this is acceptable
+        # as the system handles concurrent operations
         
         # Validation complete - using categories.yml as single source of truth
-        print("💡 All topic IDs are managed through categories.yml")
     
     def get_category(self, name: str) -> CategoryConfig:
         """Get configuration for a specific category"""
