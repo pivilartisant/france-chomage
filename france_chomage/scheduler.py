@@ -147,14 +147,12 @@ def schedule_categories() -> None:
                 scrape_time = f"{scrape_hour:02d}:00"
                 scrape_wrapper = create_sync_wrapper(name, 'scrape')
                 schedule.every().day.at(scrape_time).do(scrape_wrapper).tag(f'{name}_scrape')
-                print(f"   {config.name}: scrape at {scrape_time}")
             
             # Schedule sending jobs
             for send_hour in config.send_hours:
                 send_time = f"{send_hour:02d}:00"
                 send_wrapper = create_sync_wrapper(name, 'send')
                 schedule.every().day.at(send_time).do(send_wrapper).tag(f'{name}_send')
-                print(f"   {config.name}: send at {send_time}")
         
         # Schedule update summary once per day at 23:59
         schedule.every().day.at("23:59").do(sync_update_summary).tag('summary')
