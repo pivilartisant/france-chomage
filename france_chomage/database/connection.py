@@ -35,11 +35,11 @@ def create_engine():
     return create_async_engine(
         database_url,
         echo=os.getenv("DB_ECHO", "false").lower() == "true",
-        pool_pre_ping=True,
-        pool_recycle=1800,  # Recycle connections every 30 minutes
-        pool_size=10,       # Increased pool size for concurrent operations
-        max_overflow=20,    # Increased overflow for peak loads
-        pool_timeout=60,    # Increased timeout for busy periods
+        pool_pre_ping=False,    # Disabled to avoid event loop conflicts
+        pool_recycle=1800,      # Recycle connections every 30 minutes
+        pool_size=10,           # Increased pool size for concurrent operations
+        max_overflow=20,        # Increased overflow for peak loads
+        pool_timeout=60,        # Increased timeout for busy periods
         # Additional connection stability settings
         connect_args={
             "server_settings": {

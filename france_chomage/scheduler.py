@@ -91,40 +91,69 @@ async def send_update_summary() -> None:
         job_stats.clear()
 
 
-def create_sync_wrapper(category_name: str, job_type: str = 'combined'):
-    """Create a synchronous wrapper for async category job"""
-    def sync_wrapper():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        try:
+# Global event loop for all async operations
+_event_loop = None
+_event_loop_thread = None
+
+def get_or_create_event_loop():
+    """Get or create the global event loop running in a separate thread"""
+    global _event_loop, _event_loop_thread
+    
+    if _event_loop is None or _event_loop.is_closed():
+        import threading
+        import concurrent.futures
+        
+        def run_event_loop():
+            global _event_loop
+            _event_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(_event_loop)
+            
             # Initialize database connection for this loop
             from france_chomage.database import connection
             connection.initialize_database()
             
+            _event_loop.run_forever()
+        
+        _event_loop_thread = threading.Thread(target=run_event_loop, daemon=True)
+        _event_loop_thread.start()
+        
+        # Wait for the loop to be ready
+        while _event_loop is None:
+            time.sleep(0.1)
+    
+    return _event_loop
+
+def create_sync_wrapper(category_name: str, job_type: str = 'combined'):
+    """Create a synchronous wrapper for async category job"""
+    def sync_wrapper():
+        loop = get_or_create_event_loop()
+        try:
             if job_type == 'scrape':
-                loop.run_until_complete(run_scrape_job(category_name))
+                future = asyncio.run_coroutine_threadsafe(run_scrape_job(category_name), loop)
+                future.result(timeout=1800)  # 30 minute timeout
             elif job_type == 'send':
-                loop.run_until_complete(run_send_job(category_name))
+                future = asyncio.run_coroutine_threadsafe(run_send_job(category_name), loop)
+                future.result(timeout=300)   # 5 minute timeout
             else:
                 # Legacy combined job
-                loop.run_until_complete(run_category_job(category_name))
-        finally:
-            loop.close()
+                future = asyncio.run_coroutine_threadsafe(run_category_job(category_name), loop)
+                future.result(timeout=1800)  # 30 minute timeout
+        except Exception as e:
+            print(f"❌ Error in {job_type} job for {category_name}: {e}")
+            raise
     
     return sync_wrapper
 
 
 def sync_update_summary():
     """Synchronous wrapper for update summary"""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
+    loop = get_or_create_event_loop()
     try:
-        # Initialize database connection for this loop
-        from france_chomage.database import connection
-        connection.initialize_database()
-        loop.run_until_complete(send_update_summary())
-    finally:
-        loop.close()
+        future = asyncio.run_coroutine_threadsafe(send_update_summary(), loop)
+        future.result(timeout=300)  # 5 minute timeout
+    except Exception as e:
+        print(f"❌ Error in update summary: {e}")
+        raise
 
 
 def schedule_categories() -> None:
@@ -229,6 +258,13 @@ def main():
         print("\n🛑 Scheduler stopped")
     except Exception as e:
         print(f"\n❌ Scheduler error: {e}")
+    finally:
+        # Clean up event loop
+        global _event_loop
+        if _event_loop and not _event_loop.is_closed():
+            _event_loop.call_soon_threadsafe(_event_loop.stop)
+            if _event_loop_thread and _event_loop_thread.is_alive():
+                _event_loop_thread.join(timeout=5)
 
 
 if __name__ == "__main__":
