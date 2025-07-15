@@ -4,26 +4,23 @@ Tests pour le bot Telegram
 import pytest
 from unittest.mock import Mock, AsyncMock, patch
 
-from datetime import date
 from france_chomage.telegram.bot import TelegramJobBot
-from france_chomage.database.models import Job as DBJob
+from france_chomage.models import Job
 
 @pytest.fixture
 def sample_job():
-    """Fixture avec un job de test (DB model)"""
-    job = DBJob()
-    job.id = 1
-    job.title = "Développeur Python Senior"
-    job.company = "TechCorp Innovation"
-    job.location = "Paris, 75001"
-    job.date_posted = date(2024, 1, 15)
-    job.job_url = "https://example.com/jobs/python-dev-123"
-    job.site = "indeed"
-    job.description = "Nous recherchons un développeur Python expérimenté pour rejoindre notre équipe dynamique. Vous travaillerez sur des projets innovants..."
-    job.is_remote = True
-    job.salary_source = "55k-70k EUR"
-    job.category = "communication"
-    return job
+    """Fixture avec un job de test"""
+    return Job(
+        title="Développeur Python Senior",
+        company="TechCorp Innovation",
+        location="Paris, 75001",
+        date_posted="2024-01-15",
+        job_url="https://example.com/jobs/python-dev-123",
+        site="indeed",
+        description="Nous recherchons un développeur Python expérimenté pour rejoindre notre équipe dynamique. Vous travaillerez sur des projets innovants...",
+        is_remote=True,
+        salary_source="55k-70k EUR"
+    )
 
 @pytest.fixture
 def mock_settings():

@@ -7,8 +7,7 @@ from typing import List
 from telegram import Bot
 from telegram.request import HTTPXRequest
 from france_chomage.config import settings
-from france_chomage.database import job_manager
-from france_chomage.database.models import Job as DBJob
+from france_chomage.models import Job
 
 class TelegramJobBot:
     """Bot Telegram générique pour poster des offres d'emploi"""
@@ -37,20 +36,14 @@ class TelegramJobBot:
         
         return text
     
-    def format_job_message(self, job, job_type: str) -> str:
-        """Formate un message Telegram pour une offre (Job ou DBJob)"""
+    def format_job_message(self, job: Job, job_type: str) -> str:
+        """Formate un message Telegram pour une offre"""
         
         # Échappement des textes
         title = self.escape_markdown(job.display_title)
         company = self.escape_markdown(job.company)
         location = self.escape_markdown(job.location)
-        
-        # Format date properly - dd/mm/yyyy
-        if isinstance(job, DBJob):
-            date_posted = self.escape_markdown(job.formatted_date)  # Uses dd/mm/yyyy format
-        else:
-            # Fallback for old Job model
-            date_posted = self.escape_markdown(job.date_posted)
+        date_posted = self.escape_markdown(job.date_posted)
         
         # Construction du message
         message = f"🎯 *{title}*\n\n"
@@ -79,44 +72,7 @@ class TelegramJobBot:
         
         return message
     
-    async def send_jobs_from_database(self, category: str, topic_id: int) -> int:
-        """Send unsent jobs from database to Telegram"""
-        try:
-            # Get unsent jobs from database (last 30 days only)
-            unsent_jobs = await job_manager.get_unsent_jobs(category, max_age_days=30)
-            
-            if not unsent_jobs:
-                print(f"📭 Aucune nouvelle offre {category} à envoyer")
-                return 0
-            
-            print(f"📤 Envoi de {len(unsent_jobs)} nouvelles offres {category}")
-            
-            sent_count = 0
-            sent_job_ids = []
-            
-            for i, job in enumerate(unsent_jobs, 1):
-                print(f"📨 Envoi {i}/{len(unsent_jobs)}: {job.title[:50]}...")
-                success = await self.send_job(job, topic_id, category)
-                if success:
-                    sent_count += 1
-                    sent_job_ids.append(job.id)
-                
-                # Rate limiting
-                await asyncio.sleep(2)
-            
-            # Mark jobs as sent in database
-            if sent_job_ids:
-                marked_count = await job_manager.mark_jobs_as_sent(sent_job_ids)
-                print(f"✅ {marked_count} jobs marqués comme envoyés en base")
-            
-            print(f"🎯 Envoi terminé: {sent_count}/{len(unsent_jobs)} offres envoyées")
-            return sent_count
-            
-        except Exception as exc:
-            print(f"❌ Erreur envoi jobs depuis database: {exc}")
-            return 0
-    
-    async def send_job(self, job, topic_id: int, job_type: str) -> bool:
+    async def send_job(self, job: Job, topic_id: int, job_type: str) -> bool:
         """Envoie une offre sur Telegram"""
         try:
             message = self.format_job_message(job, job_type)
@@ -154,7 +110,26 @@ class TelegramJobBot:
                 print(f"❌ Échec total envoi: {job.title} - {str(exc2)}")
                 return False
     
-    # Old send_jobs method removed - now using send_jobs_from_database
+    async def send_jobs(self, jobs: List[Job], topic_id: int, job_type: str) -> int:
+        """Envoie une liste d'offres"""
+        if not jobs:
+            print("⚠️ Aucune offre à envoyer")
+            return 0
+        
+        print(f"📤 Envoi de {len(jobs)} offres vers le topic {topic_id}")
+        
+        sent_count = 0
+        for i, job in enumerate(jobs, 1):
+            print(f"📨 Envoi {i}/{len(jobs)}: {job.title[:50]}...")
+            success = await self.send_job(job, topic_id, job_type)
+            if success:
+                sent_count += 1
+            
+            # Rate limiting
+            await asyncio.sleep(2)
+        
+        print(f"🎯 Envoi terminé: {sent_count}/{len(jobs)} offres envoyées")
+        return sent_count
     
     async def send_update_summary(self, updates: dict) -> bool:
         """Envoie un résumé des mises à jour vers le topic général"""
