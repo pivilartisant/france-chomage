@@ -1,6 +1,6 @@
 # 🇫🇷 France Chômage Bot
 
-Bot Telegram automatisé pour scraper et publier les offres d'emploi en communication, design et restauration.
+Bot Telegram automatisé pour scraper et publier les offres d'emploi dans **49 catégories** avec architecture séparée scraping/envoi.
 
 ## 🚀 Quick Deploy
 
@@ -18,8 +18,9 @@ make docker-up
 france-chomage/
 ├── france_chomage/           # Main application package
 │   ├── database/            # PostgreSQL models & repositories  
-│   ├── scraping/            # Job scrapers (communication, design, restauration)
+│   ├── scraping/            # Job scrapers (49 categories)
 │   ├── telegram/            # Telegram bot
+│   ├── scheduler.py         # Separated scraping/sending scheduler
 │   └── models/              # Data models
 ├── deployment/              # Deployment configurations
 │   ├── docker/             # Docker Compose setup
@@ -40,45 +41,49 @@ make db-init
 make db-migrate
 ```
 
-### 📡 Job Scraping
+### 📡 Job Scraping (Independent Operation)
 ```bash
-# Scrape jobs (saves to database + filters duplicates)
-python -m france_chomage scrape communication
-python -m france_chomage scrape design
-python -m france_chomage scrape restauration
+# Scrape jobs only (saves to database + filters duplicates)
+python -m france_chomage workflow scrape communication
+python -m france_chomage workflow scrape design
+python -m france_chomage workflow scrape restauration
+# ... or any of the 49 categories
 ```
 
-### 📤 Send to Telegram
+### 📤 Send to Telegram (Independent Operation)
 ```bash
 # Send only NEW jobs from database (dd/mm/yyyy format)
-python -m france_chomage send communication
-python -m france_chomage send design
-python -m france_chomage send restauration
+python -m france_chomage workflow send communication
+python -m france_chomage workflow send design
+python -m france_chomage workflow send restauration
+# ... or any of the 49 categories
 ```
 
-### 🔄 Complete Workflow
+### 🔄 Complete Workflow (Separated Operations)
 ```bash
-# Scrape + Send new jobs only
-python -m france_chomage workflow communication
-python -m france_chomage workflow design
-python -m france_chomage workflow restauration
+# Scrape + Send new jobs (now separated internally)
+python -m france_chomage workflow run communication
+python -m france_chomage workflow run design
+python -m france_chomage workflow run restauration
+# ... or any of the 49 categories
 ```
 
-### 🤖 Automated Scheduling
+### 🤖 Automated Scheduling (Separated Operations)
 ```bash
-# Run scheduler (automated workflows)
+# Run scheduler (automated scraping and sending)
 python -m france_chomage scheduler
 
 # Database status
 make db-status
 
-# Configuration info
-python -m france_chomage info
+# Configuration info (shows separate schedules)
+python -m france_chomage utils info
 ```
 
 ## ✨ Key Features
 
 ### 🎯 **Smart Job Processing**
+- **49 job categories**: Complete coverage of French job market
 - **30-day filtering**: Only recent, relevant jobs
 - **Duplicate removal**: No more repeated job postings  
 - **Auto-deduplication**: Across different job sites
@@ -96,10 +101,11 @@ python -m france_chomage info
 - **Data integrity**: Proper validation and constraints
 - **Backup ready**: Easy export/import capabilities
 
-### 🤖 **Automated Scheduling**
-- **Communication**: 17:00 daily
-- **Design**: 18:00 daily  
-- **Restaurant**: 19:00 daily
+### 🤖 **Separated Architecture**
+- **Independent scraping**: Runs separately from sending
+- **Flexible scheduling**: Different hours for scrape vs send
+- **Better reliability**: Scraping failures don't block sending
+- **Even distribution**: Max 3 categories per hour (no clustering)
 - **Auto-summary**: Status updates after each run
 
 ## ⚙️ Configuration (.env)
@@ -115,7 +121,41 @@ LOCATION=Paris
 SKIP_INIT_JOB=0
 ```
 
-**Note:** Topic IDs are managed through `categories.yml` file. No need to set individual `TELEGRAM_*_TOPIC_ID` environment variables.
+**Note:** All 49 categories with their topic IDs and schedules are managed through `categories.yml` file. No need to set individual `TELEGRAM_*_TOPIC_ID` environment variables.
+
+## ⏰ Scheduling System
+
+The bot uses a **separated architecture** with independent scraping and sending operations:
+
+- **Scraping**: Distributed across 24 hours (max 3 categories per hour)
+- **Sending**: Runs 1 hour after scraping for each category
+- **Even distribution**: No clustering, optimal resource usage
+- **Independent operations**: Scraping failures don't block sending
+
+### Example Schedule:
+```
+00:00 - Scrape: aeronautique, immobilier, vente
+01:00 - Send: aeronautique, immobilier, vente | Scrape: agent_assurance, industrie  
+02:00 - Send: agent_assurance, industrie | Scrape: agriculture, ingénieur_electronique
+...
+```
+
+View complete schedule: `python -m france_chomage utils info`
+
+## 📋 Available Categories
+
+The bot supports **49 job categories** across all sectors:
+
+**Tech & IT**: communication, design, technologie, cybersécurité, jeu_video, ingénieur_electronique  
+**Health**: sante, kinésithérapeute, aide_a_domicile, services_personne  
+**Business**: finance, comptable, ressources_humaines, service_client, immobilier  
+**Industry**: construction, industrie, automobile, logistique, mines_carrieres  
+**Services**: restauration, tourisme, evenementiel, juridique, formation_pro  
+**Creative**: art_culture, audiovisuel, mode, patrimoine_culture  
+**Energy**: energie_renouvelable, energies, environnement  
+**Agriculture**: agriculture, animaux  
+**Transport**: transport_public, aeronautique, nautisme  
+**Others**: education, sport, securite, emploi_accompagnement, assistanat, cosmetique, travaux_manuels, services_publics, vente
 
 ## 📚 Documentation
 
@@ -123,6 +163,7 @@ SKIP_INIT_JOB=0
 - **[🚀 Deployment Guide](docs/DEPLOYMENT_README.md)** - Choose your deployment method
 - **[👨‍💻 Development Guide](docs/AGENT.md)** - Setup for developers
 - **[🗄️ Database Setup](docs/DATABASE_SETUP.md)** - Database configuration
+- **[📊 Workflow Report](WORKFLOW_REPORT.md)** - Detailed architecture and workflow analysis
 
 ## 🔧 Development
 
