@@ -28,8 +28,8 @@ class TestSettings:
             
             assert settings.telegram_bot_token == 'test_token'
             assert settings.telegram_group_id == '-1001234567890'
-            assert settings.telegram_communication_topic_id == 1  # default
-            assert settings.telegram_design_topic_id == 2  # default
+            assert settings.telegram_communication_topic_id == 3  # default
+            assert settings.telegram_design_topic_id == 40  # default
             assert settings.results_wanted == 15  # default
             assert settings.location == "Paris"  # default
             assert settings.country == "FRANCE"  # default

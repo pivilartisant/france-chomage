@@ -1,0 +1,256 @@
+categories:
+  communication:
+    search_terms: communication OR marketing OR relations publiques OR contenu
+    telegram_topic_id: 1
+    schedule_hour: 12
+    enabled: true
+  design:
+    search_terms: design OR UX OR UI OR graphisme OR créatif OR designer graphique
+    telegram_topic_id: 2
+    schedule_hour: 23
+    enabled: true
+  restauration:
+    search_terms: restauration OR cuisinier OR chef OR serveur OR barman OR sommelier
+      OR commis
+    telegram_topic_id: 3
+    schedule_hour: 15
+    enabled: true
+  sante:
+    search_terms: santé OR hôpital OR hospitalier
+    telegram_topic_id: 4
+    schedule_hour: 8
+    enabled: true
+  technologie:
+    search_terms: développeur OR ingénieur logiciel OR tech OR informatique OR data
+    telegram_topic_id: 5
+    schedule_hour: 9
+    enabled: true
+  education:
+    search_terms: éducation OR enseignant OR professeur OR école OR pédagogique
+    telegram_topic_id: 6
+    schedule_hour: 10
+    enabled: true
+  finance:
+    search_terms: finance OR comptable OR audit OR fiscalité OR banque
+    telegram_topic_id: 7
+    schedule_hour: 11
+    enabled: true
+  construction:
+    search_terms: chantier OR BTP OR construction OR bâtiment OR travaux publics
+    telegram_topic_id: 8
+    schedule_hour: 13
+    enabled: true
+  logistique:
+    search_terms: logistique OR entrepôt OR chaîne d'approvisionnement OR transport
+    telegram_topic_id: 9
+    schedule_hour: 14
+    enabled: true
+  art_culture:
+    search_terms: art OR musée OR théâtre OR galerie OR création artistique
+    telegram_topic_id: 10
+    schedule_hour: 16
+    enabled: true
+  environnement:
+    search_terms: environnement OR écologie OR développement durable OR biodiversité
+    telegram_topic_id: 11
+    schedule_hour: 17
+    enabled: true
+  service_client:
+    search_terms: service client OR support OR assistance OR relation client
+    telegram_topic_id: 12
+    schedule_hour: 18
+    enabled: true
+  ressources_humaines:
+    search_terms: RH OR ressources humaines OR recrutement OR talent OR gestion du
+      personnel
+    telegram_topic_id: 13
+    schedule_hour: 19
+    enabled: true
+  juridique:
+    search_terms: juridique OR avocat OR droit OR contrat OR législation
+    telegram_topic_id: 14
+    schedule_hour: 20
+    enabled: true
+  securite:
+    search_terms: sécurité OR agent OR surveillance OR sûreté OR prévention
+    telegram_topic_id: 15
+    schedule_hour: 21
+    enabled: true
+  recherche_science:
+    search_terms: recherche OR laboratoire OR scientifique OR doctorat OR innovation
+    telegram_topic_id: 16
+    schedule_hour: 22
+    enabled: true
+  vente:
+    search_terms: vente OR commercial OR business developer OR représentant
+    telegram_topic_id: 17
+    schedule_hour: 7
+    enabled: true
+  agriculture:
+    search_terms: agriculture OR agriculteur OR exploitation OR agroalimentaire
+    telegram_topic_id: 18
+    schedule_hour: 6
+    enabled: true
+  tourisme:
+    search_terms: tourisme OR voyage OR hôtel OR guide OR accueil touristique
+    telegram_topic_id: 19
+    schedule_hour: 5
+    enabled: true
+  immobilier:
+    search_terms: immobilier OR agent immobilier OR logement OR propriété
+    telegram_topic_id: 20
+    schedule_hour: 4
+    enabled: true
+  assistanat:
+    search_terms: assistant OR assistanat OR secrétaire OR assistant administratif
+    telegram_topic_id: 21
+    schedule_hour: 3
+    enabled: true
+  sport:
+    search_terms: sport OR coach sportif OR entraîneur OR activité physique
+    telegram_topic_id: 22
+    schedule_hour: 2
+    enabled: true
+  mode:
+    search_terms: mode OR styliste OR mannequin OR textile OR vêtement
+    telegram_topic_id: 23
+    schedule_hour: 1
+    enabled: true
+  cosmetique:
+    search_terms: cosmétique OR beauté OR esthéticienne OR maquillage OR soins
+    telegram_topic_id: 24
+    schedule_hour: 0
+    enabled: true
+  audiovisuel:
+    search_terms: audiovisuel OR vidéo OR montage OR tournage OR réalisateur
+    telegram_topic_id: 25
+    schedule_hour: 12
+    enabled: true
+  jeu_video:
+    search_terms: jeu vidéo OR gaming OR développeur jeu OR game designer OR studio
+      de jeu
+    telegram_topic_id: 26
+    schedule_hour: 13
+    enabled: true
+  automobile:
+    search_terms: automobile OR garage OR mécanique OR carrosserie OR technicien auto
+    telegram_topic_id: 27
+    schedule_hour: 14
+    enabled: true
+  aeronautique:
+    search_terms: aéronautique OR avion OR pilote OR aéroport OR maintenance aérienne
+    telegram_topic_id: 28
+    schedule_hour: 15
+    enabled: true
+  nautisme:
+    search_terms: nautisme OR marine OR bateau OR navigation OR capitaine
+    telegram_topic_id: 29
+    schedule_hour: 16
+    enabled: true
+  emploi_accompagnement:
+    search_terms: recherche emploi OR insertion OR accompagnement OR conseiller emploi
+    telegram_topic_id: 30
+    schedule_hour: 17
+    enabled: true
+  services_personne:
+    search_terms: aide à domicile OR auxiliaire OR service à la personne OR soins
+      à domicile
+    telegram_topic_id: 31
+    schedule_hour: 18
+    enabled: true
+  formation_pro:
+    search_terms: formation OR formateur OR apprentissage OR organisme de formation
+    telegram_topic_id: 32
+    schedule_hour: 19
+    enabled: true
+  evenementiel:
+    search_terms: événementiel OR événement OR organisation OR logistique événement
+    telegram_topic_id: 33
+    schedule_hour: 20
+    enabled: true
+  energies:
+    search_terms: énergie OR renouvelable OR solaire OR éolien OR ingénierie énergétique
+    telegram_topic_id: 34
+    schedule_hour: 21
+    enabled: true
+  mines_carrieres:
+    search_terms: mine OR carrière OR exploitation minière OR ingénieur minier
+    telegram_topic_id: 35
+    schedule_hour: 22
+    enabled: true
+  industrie:
+    search_terms: industrie OR usine OR production OR opérateur OR fabrication
+    telegram_topic_id: 36
+    schedule_hour: 23
+    enabled: true
+  animaux:
+    search_terms: animaux OR vétérinaire OR élevage OR soins animaliers OR refuge
+    telegram_topic_id: 37
+    schedule_hour: 6
+    enabled: true
+  services_publics:
+    search_terms: fonction publique OR administration OR mairie OR collectivité OR
+      état OR territorial
+    telegram_topic_id: 38
+    schedule_hour: 7
+    enabled: true
+  patrimoine_culture:
+    search_terms: culture OR patrimoine OR médiateur culturel OR archéologie OR bibliothèque
+    telegram_topic_id: 39
+    schedule_hour: 8
+    enabled: true
+  travaux_manuels:
+    search_terms: plomberie OR électricité OR peinture OR maçon OR menuisier OR ouvrier
+    telegram_topic_id: 40
+    schedule_hour: 9
+    enabled: true
+  transport_public:
+    search_terms: chauffeur bus OR conducteur train OR transport en commun OR RATP
+      OR SNCF
+    telegram_topic_id: 41
+    schedule_hour: 10
+    enabled: true
+  cafe_restauration_personnel:
+    search_terms: café OR barista OR serveur OR barman OR restauration rapide
+    telegram_topic_id: 42
+    schedule_hour: 17
+    enabled: true
+  comptable:
+    search_terms: comptable OR expert-comptable OR audit OR tenue de comptes
+    telegram_topic_id: 43
+    schedule_hour: 18
+    enabled: true
+  cybersécurité:
+    search_terms: cybersécurité OR analyste sécurité OR ingénieur sécurité OR ethical
+      hacking
+    telegram_topic_id: 44
+    schedule_hour: 19
+    enabled: true
+  energie_renouvelable:
+    search_terms: énergie renouvelable OR solaire OR éolien OR gestion énergie OR
+      efficacité énergétique
+    telegram_topic_id: 45
+    schedule_hour: 20
+    enabled: true
+  agent_assurance:
+    search_terms: assurance OR agent assurance OR conseiller assurance
+    telegram_topic_id: 46
+    schedule_hour: 21
+    enabled: true
+  ingénieur_electronique:
+    search_terms: ingénieur électronique OR électronique OR conception circuits OR
+      hardware
+    telegram_topic_id: 47
+    schedule_hour: 22
+    enabled: true
+  kinésithérapeute:
+    search_terms: kinésithérapeute OR physiothérapeute OR rééducation OR ostéopathie
+    telegram_topic_id: 48
+    schedule_hour: 23
+    enabled: true
+  aide_a_domicile:
+    search_terms: aide à domicile OR accompagnement OR assistance personne âgée OR
+      auxiliaire de vie
+    telegram_topic_id: 49
+    schedule_hour: 0
+    enabled: true
