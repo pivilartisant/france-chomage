@@ -84,7 +84,7 @@ The Docker setup includes:
 docker-compose exec app python -c "from france_chomage.config import settings; print('App OK')"
 
 # Check database status
-docker-compose exec app python -m france_chomage db-status
+docker-compose exec app python -m france_chomage db status
 ```
 
 ### Database Access

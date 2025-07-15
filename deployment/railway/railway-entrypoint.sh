@@ -147,7 +147,7 @@ finally:
 
 # Check migration status
 echo "📊 Checking database status..."
-python -m france_chomage db-status
+python -m france_chomage db status
 
 echo "🚀 Starting scheduler..."
 exec "$@"

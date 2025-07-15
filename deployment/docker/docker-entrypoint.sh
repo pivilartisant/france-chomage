@@ -14,11 +14,11 @@ echo "✅ PostgreSQL is ready!"
 
 # Initialize database tables if needed
 echo "🔧 Initializing database tables..."
-python -m france_chomage db-init
+python -m france_chomage db init
 
 # Check if we need to migrate existing data
 echo "📊 Checking migration status..."
-python -m france_chomage db-status
+python -m france_chomage db status
 
 echo "🚀 Starting application..."
 exec "$@"

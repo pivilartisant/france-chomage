@@ -24,22 +24,22 @@ DB_ECHO=false
 1. **Initialize database (create tables)**:
    ```bash
    make db-init
-   # or
-   python -m france_chomage db-init
+# or
+python -m france_chomage db init
    ```
 
 2. **Migrate existing JSON data**:
    ```bash
    make db-migrate
-   # or
-   python -m france_chomage db-migrate
+# or
+python -m france_chomage db migrate
    ```
 
 3. **Check database status**:
    ```bash
    make db-status
-   # or
-   python -m france_chomage db-status
+# or
+python -m france_chomage db status
    ```
 
 ## PostgreSQL Required

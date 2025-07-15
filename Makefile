@@ -58,16 +58,16 @@ validate-config: ## Valide la configuration des topics
 
 # Database commands
 db-init: ## Initialize database tables
-	python -m france_chomage db-init
+	python -m france_chomage db init
 
 db-migrate: ## Migrate JSON files to database
-	python -m france_chomage db-migrate
+	python -m france_chomage db migrate
 
 db-status: ## Show database status
-	python -m france_chomage db-status
+	python -m france_chomage db status
 
 db-cleanup: ## Clean up old jobs (90+ days)
-	python -m france_chomage db-cleanup
+	python -m france_chomage db cleanup
 
 # Railway deployment
 railway-deploy: ## Deploy to Railway (requires Railway CLI)

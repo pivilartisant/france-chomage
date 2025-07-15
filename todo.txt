@@ -1,0 +1,3 @@
+// scrape and send at differetnt times
+
+// better summary 
