@@ -163,8 +163,12 @@ async def get_migration_status(session: AsyncSession) -> Dict[str, Any]:
     """Get migration status and statistics"""
     repository = JobRepository(session)
     
+    # Load categories from categories.yml
+    from ..categories import CategoryManager
+    category_manager = CategoryManager()
+    categories = category_manager.get_enabled_category_names()
+    
     stats = {}
-    categories = ["communication", "design", "restauration"]
     
     for category in categories:
         jobs = await repository.get_jobs_by_category(category, days_limit=0)
