@@ -22,6 +22,7 @@
 - ✅ Built-in monitoring and logs
 - ✅ Free tier available
 - ✅ Zero configuration needed
+- ✅ **Safe deployments** - no data loss on updates
 
 **Cost:** Free tier (500 hours/month) or $5/month for Pro
 
@@ -147,10 +148,16 @@ make db-migrate
 ### Backup Strategy
 ```bash
 # Create backup
-python -m france_chomage backup --all
+python -m france_chomage db backup
 
-# Restore from backup
-python -m france_chomage restore --file backup.json
+# Create backup for specific category
+python -m france_chomage db backup --category communication
+
+# Check database status
+python -m france_chomage db status
+
+# Check migration status
+python -m france_chomage migrate check
 ```
 
 ---

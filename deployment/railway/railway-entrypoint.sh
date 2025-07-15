@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "🚂 Starting France Chômage Bot on Railway..."
+echo "🚂 Starting France Chômage Bot on Railway (Safe Deployment)..."
 
 # Check if DATABASE_URL is provided by Railway
 if [ -z "$DATABASE_URL" ]; then
@@ -21,132 +21,153 @@ fi
 echo "⏳ Waiting for database connection..."
 sleep 5
 
-# Initialize database tables
-echo "🔧 Initializing database tables..."
-echo "🔍 Testing database connection first..."
+# Test database connection
+echo "🔍 Testing database connection..."
 python -c "
 import os
-print(f'DATABASE_URL present: {bool(os.getenv(\"DATABASE_URL\"))}')
-print(f'DATABASE_URL starts with: {os.getenv(\"DATABASE_URL\", \"\")[:50]}...')
-"
-
-echo "🔧 Attempting database initialization..."
-
-# FORCE clean database initialization - always ensure correct schema
-echo "🔧 Ensuring clean database state..."
-python -c "
 import asyncio
 from france_chomage.database import connection
-from sqlalchemy import text
 
-async def force_clean_init():
-    connection.initialize_database()
-    if connection.engine is None:
-        raise RuntimeError('Database engine not initialized')
-    async with connection.engine.begin() as conn:
-        try:
-            print('🗑️ Dropping any existing tables to ensure clean state...')
-            await conn.execute(text('DROP TABLE IF EXISTS jobs CASCADE;'))
-            print('✅ Clean slate - ready for table creation')
-        except Exception as e:
-            print(f'📋 Error during cleanup (probably OK): {e}')
-
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
-try:
-    loop.run_until_complete(force_clean_init())
-finally:
-    loop.close()
-" && echo "🔧 Database cleanup complete"
-
-# FORCE table creation - guaranteed to work
-echo "🔧 Creating database tables with correct schema..."
-python -c "
-import asyncio
-import traceback
-from france_chomage.database.models import Base
-from france_chomage.database import connection
-
-async def force_create_tables():
+async def test_connection():
     try:
-        print('🔧 Initializing database connection...')
         connection.initialize_database()
-        
         if connection.engine is None:
             raise RuntimeError('Database engine not initialized')
-            
-        print('🔧 Creating all tables from SQLAlchemy models...')
+        
         async with connection.engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        
-        print('✅ All database tables created successfully!')
-        return True
-        
+            result = await conn.execute('SELECT 1')
+            print('✅ Database connection successful')
+            return True
     except Exception as e:
-        print(f'❌ Table creation failed: {e}')
-        traceback.print_exc()
+        print(f'❌ Database connection failed: {e}')
         return False
 
-# Run table creation
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 try:
-    success = loop.run_until_complete(force_create_tables())
+    success = loop.run_until_complete(test_connection())
     if not success:
         exit(1)
 finally:
     loop.close()
 "
 
-echo "🔍 Verifying tables and columns were created..."
+# Check if this is first deployment or migration needed
+echo "🔍 Checking database state..."
 python -c "
 import asyncio
 from france_chomage.database import connection
 from sqlalchemy import text
 
-async def check_tables():
+async def check_first_deployment():
     connection.initialize_database()
     async with connection.engine.begin() as conn:
-        # Check tables
-        result = await conn.execute(
-            text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\';')
-        )
-        tables = [row[0] for row in result]
-        print(f'📋 Tables found: {tables}')
-        
-        if 'jobs' in tables:
-            print('✅ Jobs table exists!')
-            
-            # Check columns in jobs table
+        try:
+            # Check if jobs table exists
             result = await conn.execute(
-                text('SELECT column_name, data_type FROM information_schema.columns WHERE table_name = \\'jobs\\' ORDER BY ordinal_position;')
+                text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\' AND tablename = \\'jobs\\';')
             )
-            columns = [(row[0], row[1]) for row in result]
-            print(f'📋 Jobs table columns: {columns}')
+            tables = [row[0] for row in result]
             
-            # Check if we have expected columns
-            expected_columns = ['id', 'title', 'company', 'location', 'date_posted', 'job_url', 'site', 'category']
-            missing_columns = [col for col in expected_columns if not any(col == c[0] for c in columns)]
-            if missing_columns:
-                print(f'❌ Missing columns: {missing_columns}')
-                print('🔧 Need to recreate table with correct schema')
-                exit(1)
+            if 'jobs' not in tables:
+                print('🆕 First deployment - will create initial schema')
+                with open('/tmp/first_deployment', 'w') as f:
+                    f.write('true')
             else:
-                print('✅ All expected columns found!')
-        else:
-            print('❌ Jobs table missing!')
+                # Check if we have existing data
+                result = await conn.execute(text('SELECT COUNT(*) FROM jobs;'))
+                job_count = result.scalar()
+                print(f'📊 Existing deployment - found {job_count} jobs in database')
+                with open('/tmp/first_deployment', 'w') as f:
+                    f.write('false')
+        except Exception as e:
+            print(f'❌ Error checking database state: {e}')
             exit(1)
 
 loop = asyncio.new_event_loop()
 asyncio.set_event_loop(loop)
 try:
-    loop.run_until_complete(check_tables())
+    loop.run_until_complete(check_first_deployment())
 finally:
     loop.close()
 "
 
-# Check migration status
-echo "📊 Checking database status..."
+# Read the deployment state
+FIRST_DEPLOYMENT=$(cat /tmp/first_deployment)
+
+if [ "$FIRST_DEPLOYMENT" = "true" ]; then
+    echo "🆕 First deployment detected - creating initial database schema..."
+    
+    # Create tables using SQLAlchemy models
+    python -c "
+import asyncio
+from france_chomage.database.models import Base
+from france_chomage.database import connection
+
+async def create_initial_schema():
+    connection.initialize_database()
+    async with connection.engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print('✅ Initial database schema created')
+
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+try:
+    loop.run_until_complete(create_initial_schema())
+finally:
+    loop.close()
+"
+    
+    # Stamp database as being at head revision
+    echo "🔖 Marking database as up-to-date with migrations..."
+    python -m france_chomage migrate stamp head
+    
+else
+    echo "🔄 Existing deployment - checking for pending migrations..."
+    
+    # Check if migrations are needed
+    if python -m france_chomage migrate check; then
+        echo "✅ Database is up to date"
+    else
+        echo "⚠️ Database needs migration - applying pending migrations..."
+        python -m france_chomage migrate upgrade
+    fi
+fi
+
+# Final verification
+echo "🔍 Final database verification..."
+python -c "
+import asyncio
+from france_chomage.database import connection
+from sqlalchemy import text
+
+async def verify_database():
+    connection.initialize_database()
+    async with connection.engine.begin() as conn:
+        # Check table exists
+        result = await conn.execute(
+            text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\' AND tablename = \\'jobs\\';')
+        )
+        tables = [row[0] for row in result]
+        
+        if 'jobs' not in tables:
+            print('❌ Jobs table missing after setup!')
+            exit(1)
+        
+        # Count jobs
+        result = await conn.execute(text('SELECT COUNT(*) FROM jobs;'))
+        job_count = result.scalar()
+        print(f'✅ Database ready - {job_count} jobs in database')
+
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+try:
+    loop.run_until_complete(verify_database())
+finally:
+    loop.close()
+"
+
+echo "📊 Database status:"
 python -m france_chomage db status
 
 echo "🚀 Starting scheduler..."

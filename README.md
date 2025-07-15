@@ -34,11 +34,26 @@ france-chomage/
 
 ### 🗄️ Database Setup (First Time)
 ```bash
-# Initialize database tables
+# Initialize database tables (safe, preserves existing data)
 make db-init
 
 # Migrate existing JSON data (if any)
 make db-migrate
+
+# Create backup before changes
+make db-backup
+```
+
+### 🔄 Database Migration Management
+```bash
+# Check migration status
+python -m france_chomage migrate check
+
+# Apply pending migrations
+python -m france_chomage migrate upgrade
+
+# Create new migration
+python -m france_chomage migrate revision -m "Description"
 ```
 
 ### 📡 Job Scraping (Independent Operation)
@@ -99,6 +114,8 @@ python -m france_chomage utils info
 - **PostgreSQL storage**: Reliable, scalable data management
 - **Fast queries**: Indexed for performance
 - **Data integrity**: Proper validation and constraints
+- **Safe deployments**: No data loss on updates
+- **Migration management**: Alembic-powered schema evolution
 - **Backup ready**: Easy export/import capabilities
 
 ### 🤖 **Separated Architecture**
@@ -163,6 +180,7 @@ The bot supports **49 job categories** across all sectors:
 - **[🚀 Deployment Guide](docs/DEPLOYMENT_README.md)** - Choose your deployment method
 - **[👨‍💻 Development Guide](docs/AGENT.md)** - Setup for developers
 - **[🗄️ Database Setup](docs/DATABASE_SETUP.md)** - Database configuration
+- **[🔐 Safe Deployment Guide](deployment/SAFE_DEPLOYMENT_GUIDE.md)** - Data-safe deployment practices
 - **[📊 Workflow Report](WORKFLOW_REPORT.md)** - Detailed architecture and workflow analysis
 
 ## 🔧 Development

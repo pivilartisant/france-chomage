@@ -96,3 +96,38 @@ def cleanup(
             raise typer.Exit(1)
     
     asyncio.run(_cleanup())
+
+
+@app.command()
+def backup(
+    category: str = typer.Option(None, help="Category to backup (default: all)"),
+    output: str = typer.Option(None, help="Output file path")
+):
+    """Backup database jobs to JSON files"""
+    import asyncio
+    from france_chomage.database.migration_utils import backup_jobs_to_json
+    
+    async def _backup():
+        try:
+            connection.initialize_database()
+            
+            if connection.async_session_factory is None:
+                raise RuntimeError("Database not properly initialized")
+            
+            async with connection.async_session_factory() as session:
+                if category:
+                    # Backup specific category
+                    filename = await backup_jobs_to_json(session, category, output)
+                    typer.echo(f"✅ Backup completed: {filename}")
+                else:
+                    # Backup all categories
+                    categories = ["communication", "design", "restauration"]
+                    for cat in categories:
+                        filename = await backup_jobs_to_json(session, cat, output)
+                        typer.echo(f"✅ Backup completed: {filename}")
+                        
+        except Exception as exc:
+            typer.echo(f"❌ Backup error: {exc}")
+            raise typer.Exit(1)
+    
+    asyncio.run(_backup())
