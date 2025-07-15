@@ -34,15 +34,7 @@ def get_scraper_class(domain: str):
         return lambda: create_category_scraper(category_config)
     except Exception as e:
         typer.echo(f"❌ Error getting scraper for {domain}: {e}")
-        # Fallback to old method for backward compatibility
-        from france_chomage.scraping import CommunicationScraper, DesignScraper, RestaurationScraper
-        
-        scrapers = {
-            "communication": CommunicationScraper,
-            "design": DesignScraper,
-            "restauration": RestaurationScraper,
-        }
-        return scrapers.get(domain)
+        raise typer.Exit(1)
 
 
 def get_topic_id(domain: str) -> int:
@@ -52,13 +44,7 @@ def get_topic_id(domain: str) -> int:
         return category_config.telegram_topic_id
     except Exception as e:
         typer.echo(f"❌ Error getting topic ID for {domain}: {e}")
-        # Fallback to old method for backward compatibility
-        topic_ids = {
-            "communication": settings.telegram_communication_topic_id,
-            "design": settings.telegram_design_topic_id,
-            "restauration": settings.telegram_restauration_topic_id,
-        }
-        return topic_ids.get(domain, 0)
+        raise typer.Exit(1)
 
 
 # Backward compatibility
