@@ -93,23 +93,33 @@ def update():
             typer.echo(f"❌ Error loading categories: {e}")
             return
         
-        for category in enabled_categories:
-            file_path = Path(f"jobs_{category}.json")
-            if file_path.exists():
-                try:
-                    with file_path.open('r', encoding='utf-8') as f:
-                        data = json.load(f)
-                    
-                    job_count = len(data) if isinstance(data, list) else 0
-                    updates[category] = {'jobs_sent': job_count}
-                    typer.echo(f"📁 {category}: {job_count} jobs in file")
-                    
-                except Exception as e:
-                    updates[category] = {'jobs_sent': 0, 'error': f"File read error: {e}"}
-                    typer.echo(f"❌ Error reading {category}: {e}")
-            else:
-                updates[category] = {'jobs_sent': 0, 'error': 'File not found'}
-                typer.echo(f"⚠️ File jobs_{category}.json not found")
+        # Query database for job counts by category
+        from france_chomage.database import connection
+        from france_chomage.database.repository import JobRepository
+        
+        try:
+            connection.initialize_database()
+            if connection.async_session_factory is None:
+                raise RuntimeError("Database not properly initialized")
+                
+            async with connection.async_session_factory() as session:
+                repository = JobRepository(session)
+                
+                for category in enabled_categories:
+                    try:
+                        # Get jobs from database (last 30 days)
+                        jobs = await repository.get_jobs_by_category(category, days_limit=30)
+                        job_count = len(jobs)
+                        updates[category] = {'jobs_sent': job_count}
+                        typer.echo(f"💾 {category}: {job_count} jobs in database")
+                        
+                    except Exception as e:
+                        updates[category] = {'jobs_sent': 0, 'error': f"Database query error: {e}"}
+                        typer.echo(f"❌ Error querying {category}: {e}")
+                        
+        except Exception as e:
+            typer.echo(f"❌ Database connection error: {e}")
+            return
         
         if updates:
             typer.echo("📊 Sending status summary...")

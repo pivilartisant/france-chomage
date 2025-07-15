@@ -161,25 +161,70 @@ class TelegramJobBot:
         try:
             from datetime import datetime
             
-            # Construction du message de résumé
-            message = "📊 *Mise à jour France Chômage Bot*\n\n"
+            # Construction du message de résumé avec formatage amélioré
+            message = "```\n"
+            message += "┌─────────────────────────────────────┐\n"
+            message += "│  📊 France Chômage Bot - Rapport    │\n"
+            message += "└─────────────────────────────────────┘\n"
+            message += "```\n\n"
             
-            # Informations par catégorie
-            total_jobs = 0
+            # Filtrer pour ne garder que les catégories avec des jobs ou des erreurs importantes
+            active_categories = {}
+            error_count = 0
+            
             for category, info in updates.items():
                 jobs_count = info.get('jobs_sent', 0)
-                total_jobs += jobs_count
+                if jobs_count > 0:
+                    active_categories[category] = info
+                elif info.get('error') and 'File not found' not in info['error']:
+                    active_categories[category] = info
+                elif info.get('error'):
+                    error_count += 1
+            
+            # Calcul du total pour les pourcentages
+            total_jobs = sum(info.get('jobs_sent', 0) for info in active_categories.values())
+            
+            # Informations par catégorie avec barres de progression
+            for category, info in active_categories.items():
+                jobs_count = info.get('jobs_sent', 0)
+                percentage = (jobs_count / total_jobs * 100) if total_jobs > 0 else 0
                 emoji = {'communication': '🎯', 'design': '🎨', 'restauration': '🍽️'}.get(category, '📋')
                 
+                # Création de la barre de progression (20 caractères)
+                filled_bars = int(percentage / 5)  # 100% = 20 bars, donc 5% par bar
+                progress_bar = "█" * filled_bars + "░" * (20 - filled_bars)
+                
                 message += f"{emoji} *{category.title()}*: {jobs_count} offres\n"
+                message += f"   `{progress_bar}` {percentage:.0f}% du total\n"
                 
                 if info.get('error'):
                     message += f"  ⚠️ Erreur: {info['error']}\n"
+                message += "\n"
             
-            # Résumé total
-            message += f"\n📈 *Total*: {total_jobs} nouvelles offres\n"
-            message += f"🕒 *Dernière mise à jour*: {datetime.now().strftime('%d/%m/%Y à %H:%M')}\n"
-            message += "A bientôt pour plus d'offres"
+            # Résumé total dans une boîte
+            message += "```\n"
+            message += "┌─────────────────────────────────────┐\n"
+            message += f"│ 📈 Total: {total_jobs} offres{' ' * (23 - len(str(total_jobs)))}│\n"
+            
+            # Trouver la catégorie avec le plus d'offres
+            if active_categories:
+                top_category = max(active_categories.items(), key=lambda x: x[1].get('jobs_sent', 0))
+                top_name = top_category[0].title()
+                top_count = top_category[1].get('jobs_sent', 0)
+                message += f"│ 🎯 Top catégorie: {top_name} ({top_count}){' ' * (37 - len(top_name) - len(str(top_count)) - 4)}│\n"
+                
+                # Moyenne par catégorie
+                avg_jobs = total_jobs // len(active_categories)
+                message += f"│ 📊 Moyenne: {avg_jobs} offres/catégorie{' ' * (19 - len(str(avg_jobs)))}│\n"
+            
+            # Date avec jour de la semaine
+            now = datetime.now()
+            days_fr = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim']
+            day_name = days_fr[now.weekday()]
+            date_str = f"{day_name} {now.strftime('%d/%m à %H:%M')}"
+            message += f"│ 🕒 Dernière MAJ: {date_str}{' ' * (19 - len(date_str))}│\n"
+            message += "└─────────────────────────────────────┘\n"
+            message += "```"
             
             await self.bot.send_message(
                 chat_id=self.group_id,
