@@ -97,10 +97,9 @@ def create_sync_wrapper(category_name: str, job_type: str = 'combined'):
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
-            # Reset database connection for this loop
+            # Initialize database connection for this loop
             from france_chomage.database import connection
-            connection.engine = None
-            connection.async_session_factory = None
+            connection.initialize_database()
             
             if job_type == 'scrape':
                 loop.run_until_complete(run_scrape_job(category_name))
@@ -120,10 +119,9 @@ def sync_update_summary():
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
-        # Reset database connection for this loop
+        # Initialize database connection for this loop
         from france_chomage.database import connection
-        connection.engine = None
-        connection.async_session_factory = None
+        connection.initialize_database()
         loop.run_until_complete(send_update_summary())
     finally:
         loop.close()

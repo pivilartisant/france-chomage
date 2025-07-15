@@ -36,10 +36,10 @@ def create_engine():
         database_url,
         echo=os.getenv("DB_ECHO", "false").lower() == "true",
         pool_pre_ping=True,
-        pool_recycle=3600,
-        pool_size=5,
-        max_overflow=10,
-        pool_timeout=30,
+        pool_recycle=1800,  # Recycle connections every 30 minutes
+        pool_size=10,       # Increased pool size for concurrent operations
+        max_overflow=20,    # Increased overflow for peak loads
+        pool_timeout=60,    # Increased timeout for busy periods
     )
 
 # Global engine and session factory (will be initialized later)
