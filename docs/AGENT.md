@@ -152,13 +152,25 @@ SKIP_INIT_JOB=0
 ```
 
 ## Adding New Job Categories
-1. Create scraper in `france_chomage/scraping/new_category.py`
-2. Update imports in `france_chomage/scraping/__init__.py`
-3. Add configuration in `france_chomage/config.py`
-4. Update CLI in `france_chomage/cli/shared.py` (add to VALID_DOMAINS and mappings)
-5. Update scheduler in `france_chomage/scheduler.py`
-6. Add environment variables to `.env`
-7. Test with `python -m france_chomage scrape run new_category`
+
+**NEW SIMPLIFIED PROCESS** (2 minutes instead of 45 minutes):
+
+1. Edit `categories.yml` and add your category:
+   ```yaml
+   your_category:
+     search_terms: "your search terms"
+     telegram_topic_id: 600  # unique ID
+     schedule_hour: 20
+     enabled: true
+   ```
+2. Test: `python -m france_chomage scrape run your_category`
+
+That's it! The system automatically handles scheduling, CLI integration, and validation.
+
+See [ADDING_CATEGORIES.md](ADDING_CATEGORIES.md) for detailed documentation.
+
+### Legacy Process (for reference only)
+The old 7-step manual process is no longer needed but still supported for existing categories.
 
 **Note**: With the new modular CLI structure, adding a new category now requires changes in only ONE place (`shared.py`) instead of multiple files!
 

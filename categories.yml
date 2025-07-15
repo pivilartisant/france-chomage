@@ -1,0 +1,31 @@
+# Job Categories Configuration
+# This file defines all job categories for the France Chômage scraper
+
+categories:
+  communication:
+    search_terms: "communication"
+    telegram_topic_id: 3
+    schedule_hour: 17
+    enabled: true
+    
+  design:
+    search_terms: "design graphique OR graphiste OR UI UX OR designer"
+    telegram_topic_id: 40
+    schedule_hour: 18
+    enabled: true
+    
+  restauration:
+    search_terms: "restauration OR cuisinier OR chef OR serveur OR barman OR sommelier OR commis"
+    telegram_topic_id: 326
+    schedule_hour: 19
+    enabled: true
+    
+# Example of adding a new category:
+# 
+# data_science:
+#   search_terms: "data science"
+#   telegram_topic_id: 500
+#   schedule_hour: 16
+#   enabled: true
+#   max_results: 20  # Optional: override default results limit
+#   # custom_scraper_class: "DataScienceScraper"  # Optional: use custom scraper
