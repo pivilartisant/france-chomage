@@ -244,8 +244,9 @@ def main():
         print(f"❌ Failed to schedule categories: {e}")
         return
     
-    # Run startup jobs
-    run_startup_jobs()
+    # Skip startup jobs to avoid database connection overload
+    # run_startup_jobs()
+    print("⏭️ Skipping startup jobs (avoiding database connection overload)")
     
     print("\n⏰ Scheduler active. Press Ctrl+C to stop.")
     

@@ -165,7 +165,7 @@ except Exception as e:
 "
 
 echo "📊 Database status:"
-python -m france_chomage db status
+echo "⏭️ Skipping database status check to avoid connection conflicts with scheduler"
 
 echo "🚀 Starting scheduler..."
 exec "$@"
