@@ -22,14 +22,28 @@ def info():
     typer.echo(f"Environment: {env.value}")
     typer.echo(f"Location: {settings.location}")
     typer.echo(f"Results wanted: {settings.results_wanted}")
-    typer.echo(f"Communication topic: {settings.telegram_communication_topic_id}")
-    typer.echo(f"Design topic: {settings.telegram_design_topic_id}")
-    typer.echo(f"Restauration topic: {settings.telegram_restauration_topic_id}")
     typer.echo(f"Group ID: {settings.telegram_group_id}")
-    typer.echo(f"Communication hours: {settings.communication_hours}")
-    typer.echo(f"Design hours: {settings.design_hours}")
-    typer.echo(f"Restauration hours: {settings.restauration_hours}")
     typer.echo(f"Skip initial jobs: {settings.skip_init_job}")
+    typer.echo()
+    
+    # Show category information
+    try:
+        categories = settings.category_manager.get_enabled_categories()
+        typer.echo("📂 Enabled Categories:")
+        for name, category in categories.items():
+            topic_id = settings.category_manager.get_topic_id(name)
+            typer.echo(f"  {name}: Topic ID {topic_id}, Schedule: {category.schedule_hour}:00")
+    except Exception as e:
+        typer.echo(f"❌ Error loading categories: {e}")
+        
+    typer.echo()
+    typer.echo("📊 Main Categories:")
+    try:
+        typer.echo(f"  Communication: {settings.telegram_communication_topic_id}")
+        typer.echo(f"  Design: {settings.telegram_design_topic_id}")
+        typer.echo(f"  Restauration: {settings.telegram_restauration_topic_id}")
+    except Exception as e:
+        typer.echo(f"  ❌ Error: {e}")
 
 
 @app.command()
@@ -67,9 +81,15 @@ def update():
     
     async def _update():
         updates = {}
-        categories = ['communication', 'design', 'restauration']
         
-        for category in categories:
+        # Get all enabled categories
+        try:
+            enabled_categories = settings.category_manager.get_enabled_category_names()
+        except Exception as e:
+            typer.echo(f"❌ Error loading categories: {e}")
+            return
+        
+        for category in enabled_categories:
             file_path = Path(f"jobs_{category}.json")
             if file_path.exists():
                 try:

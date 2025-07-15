@@ -108,15 +108,14 @@ python -m france_chomage info
 # Telegram (requis)
 TELEGRAM_BOT_TOKEN=your_token_from_botfather
 TELEGRAM_GROUP_ID=your_group_id
-TELEGRAM_COMMUNICATION_TOPIC_ID=3
-TELEGRAM_DESIGN_TOPIC_ID=40
-TELEGRAM_RESTAURATION_TOPIC_ID=326
 
 # Scraping (optionnel)
 RESULTS_WANTED=20
 LOCATION=Paris
 SKIP_INIT_JOB=0
 ```
+
+**Note:** Topic IDs are managed through `categories.yml` file. No need to set individual `TELEGRAM_*_TOPIC_ID` environment variables.
 
 ## 📚 Documentation
 

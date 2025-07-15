@@ -92,17 +92,8 @@ class CategoryManager:
             duplicates = [hour for hour in set(schedule_hours) if schedule_hours.count(hour) > 1]
             print(f"⚠️ Warning: Multiple categories scheduled at same hour: {duplicates}")
         
-        # Validate environment variables exist for enabled categories
-        missing_env_vars = []
-        for category in self._categories.values():
-            if category.enabled:
-                env_var = f"TELEGRAM_{category.name.upper()}_TOPIC_ID"
-                if not os.getenv(env_var):
-                    missing_env_vars.append(env_var)
-        
-        if missing_env_vars:
-            print(f"⚠️ Warning: Missing environment variables: {missing_env_vars}")
-            print("💡 Categories will use configuration values, but environment variables take precedence")
+        # Validation complete - using categories.yml as single source of truth
+        print("💡 All topic IDs are managed through categories.yml")
     
     def get_category(self, name: str) -> CategoryConfig:
         """Get configuration for a specific category"""
@@ -117,6 +108,11 @@ class CategoryManager:
             raise ValueError(f"Category '{name}' is disabled")
         
         return category
+    
+    def get_topic_id(self, name: str) -> int:
+        """Get the topic ID for a category from categories.yml"""
+        category = self.get_category(name)
+        return category.telegram_topic_id
     
     def get_all_categories(self) -> Dict[str, CategoryConfig]:
         """Get all category configurations"""

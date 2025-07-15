@@ -79,13 +79,28 @@ finance:
 
 ## Environment Variables (Optional)
 
-You can still override configuration with environment variables:
+### Configuration System
 
-```bash
-TELEGRAM_YOUR_CATEGORY_TOPIC_ID=600
+The application uses a `categories.yml` file to manage all categories and their topic IDs. This is now the single source of truth for all topic configuration.
+
+**Steps to add a category:**
+1. Add your category to `categories.yml` with the proper topic ID
+2. The system will automatically use the topic ID from the configuration
+3. No environment variables needed for topic IDs
+
+**Example categories.yml entry:**
+```yaml
+categories:
+  your_category:
+    search_terms: your search terms here
+    telegram_topic_id: 600
+    schedule_hour: 14
+    enabled: true
 ```
 
-Environment variables take precedence over configuration file values.
+To create forum topics automatically, use the scripts in `scripts/telegram/`.
+
+**Note:** Environment variables for topic IDs are no longer supported. All topic management is done through `categories.yml`.
 
 ## Validation
 
