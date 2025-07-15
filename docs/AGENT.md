@@ -10,7 +10,7 @@ A French Telegram bot that scrapes job offers for communication, design, and res
 - **pandas** - Data manipulation
 - **pydantic** (2.5.0) - Data validation
 - **schedule** (1.2.0) - Job scheduling
-- **typer** (0.9.0) - CLI framework
+- **typer** (0.16.0) - CLI framework with rich output
 - **pytest** (7.4.3) - Testing framework
 - **SQLAlchemy** (2.0.23) - Database ORM
 - **asyncpg** (0.29.0) - PostgreSQL async driver
@@ -45,53 +45,55 @@ black france_chomage/ --line-length=100
 make clean
 ```
 
-### Application Usage
+### Application Usage (New Modular CLI)
 ```bash
 # Scraping only (saves to database)
-python -m france_chomage scrape communication
-python -m france_chomage scrape design
-python -m france_chomage scrape restauration
+python -m france_chomage scrape run communication
+python -m france_chomage scrape run design
+python -m france_chomage scrape run restauration
 
 # Send only (reads from database, new jobs only)
-python -m france_chomage send communication
-python -m france_chomage send design
-python -m france_chomage send restauration
+python -m france_chomage send run communication
+python -m france_chomage send run design
+python -m france_chomage send run restauration
 
 # Complete workflow (scrape + send)
-python -m france_chomage workflow communication
-python -m france_chomage workflow design
-python -m france_chomage workflow restauration
+python -m france_chomage workflow run communication
+python -m france_chomage workflow run design
+python -m france_chomage workflow run restauration
 
 # Run scheduler (automated workflows)
 python -m france_chomage scheduler
 make run-scheduler
 
-# Configuration info
-python -m france_chomage info
-make info
+# Configuration and utilities
+python -m france_chomage utils info
+python -m france_chomage utils test
+python -m france_chomage utils update
 
-# Test configuration
-python -m france_chomage test
-make test-config
+# Get help for any command
+python -m france_chomage --help
+python -m france_chomage scrape --help
+python -m france_chomage db --help
 ```
 
 ### Database Management
 ```bash
 # Initialize database tables
 make db-init
-python -m france_chomage db-init
+python -m france_chomage db init
 
 # Migrate JSON files to database
 make db-migrate
-python -m france_chomage db-migrate
+python -m france_chomage db migrate
 
 # Show database status
 make db-status
-python -m france_chomage db-status
+python -m france_chomage db status
 
 # Clean up old jobs (90+ days)
 make db-cleanup
-python -m france_chomage db-cleanup
+python -m france_chomage db cleanup --days 90
 ```
 
 ### Docker
@@ -110,7 +112,15 @@ docker run --env-file .env france-chomage-bot
 france_chomage/
 ├── config.py            # Centralized configuration
 ├── scheduler.py         # Main scheduler
-├── cli.py               # CLI interface
+├── cli.py               # CLI interface (legacy)
+├── cli/                 # Modular CLI structure
+│   ├── __init__.py      # Main CLI app with sub-applications
+│   ├── shared.py        # Domain validation and utilities
+│   ├── scraping.py      # Scraping commands
+│   ├── sending.py       # Telegram sending commands
+│   ├── workflow.py      # Complete workflow commands
+│   ├── database.py      # Database management commands
+│   └── utils.py         # Utility commands (info, test, etc.)
 ├── models/job.py        # Job model with validation
 ├── database/            # Database models & repositories
 ├── scraping/            # Scrapers (communication, design, restauration)
@@ -145,10 +155,12 @@ SKIP_INIT_JOB=0
 1. Create scraper in `france_chomage/scraping/new_category.py`
 2. Update imports in `france_chomage/scraping/__init__.py`
 3. Add configuration in `france_chomage/config.py`
-4. Update CLI in `france_chomage/cli.py`
+4. Update CLI in `france_chomage/cli/shared.py` (add to VALID_DOMAINS and mappings)
 5. Update scheduler in `france_chomage/scheduler.py`
 6. Add environment variables to `.env`
-7. Test with `python -m france_chomage scrape new_category`
+7. Test with `python -m france_chomage scrape run new_category`
+
+**Note**: With the new modular CLI structure, adding a new category now requires changes in only ONE place (`shared.py`) instead of multiple files!
 
 ## Scheduled Jobs
 - Communication: 17:00
