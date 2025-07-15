@@ -151,38 +151,38 @@ def sync_update_summary():
     finally:
         loop.close()
 
-# Initialize database
-initialize_database()
-
-# Planification des jobs
-schedule.every().day.at("17:00").do(sync_communication_jobs).tag('communication')
-schedule.every().day.at("18:00").do(sync_design_jobs).tag('design')
-schedule.every().day.at("19:00").do(sync_restauration_jobs).tag('restauration')
-
-# Résumé envoyé après chaque job avec délai
-schedule.every().day.at("17:05").do(sync_update_summary).tag('summary')
-schedule.every().day.at("18:05").do(sync_update_summary).tag('summary')
-schedule.every().day.at("19:05").do(sync_update_summary).tag('summary')
-
-print("📅 Jobs planifiés:")
-print("📢 Communication: 17:00")
-print("🎨 Design: 18:00")
-print("🍽️ Restauration: 19:00")
-print("📊 Résumés: 17:05, 18:05, 19:05")
-
-# Exécution immédiate en cas de démarrage (sauf si désactivé)
-if not settings.skip_init_job:
-    print("\n🚀 Exécution des jobs de démarrage...")
-    sync_communication_jobs()
-    sync_design_jobs()
-    sync_restauration_jobs()
-else:
-    print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
-
-print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
-
 def main():
     """Point d'entrée principal - Synchrone"""
+    # Initialize database
+    initialize_database()
+
+    # Planification des jobs
+    schedule.every().day.at("17:00").do(sync_communication_jobs).tag('communication')
+    schedule.every().day.at("18:00").do(sync_design_jobs).tag('design')
+    schedule.every().day.at("19:00").do(sync_restauration_jobs).tag('restauration')
+
+    # Résumé envoyé après chaque job avec délai
+    schedule.every().day.at("17:05").do(sync_update_summary).tag('summary')
+    schedule.every().day.at("18:05").do(sync_update_summary).tag('summary')
+    schedule.every().day.at("19:05").do(sync_update_summary).tag('summary')
+
+    print("📅 Jobs planifiés:")
+    print("📢 Communication: 17:00")
+    print("🎨 Design: 18:00")
+    print("🍽️ Restauration: 19:00")
+    print("📊 Résumés: 17:05, 18:05, 19:05")
+
+    # Exécution immédiate en cas de démarrage (sauf si désactivé)
+    if not settings.skip_init_job:
+        print("\n🚀 Exécution des jobs de démarrage...")
+        sync_communication_jobs()
+        sync_design_jobs()
+        sync_restauration_jobs()
+    else:
+        print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
+
+    print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
+
     try:
         while True:
             schedule.run_pending()
