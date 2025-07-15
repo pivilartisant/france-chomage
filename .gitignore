@@ -27,6 +27,8 @@ htmlcov/
 *.swo
 *~
 
+# Documentation is now in docs/ folder
+
 # OS
 .DS_Store
 Thumbs.db

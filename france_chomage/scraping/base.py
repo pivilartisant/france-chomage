@@ -12,6 +12,7 @@ from jobspy import scrape_jobs
 from france_chomage.config import settings
 from france_chomage.environments import get_sites_for_environment, is_docker
 from france_chomage.models import Job
+from france_chomage.database import job_manager
 
 class ScraperBase(ABC):
     """Classe de base pour tous les scrapers"""
@@ -32,6 +33,11 @@ class ScraperBase(ABC):
         
         if jobs:
             print(f"✅ Scraping terminé - {len(jobs)} offres trouvées")
+            
+            # Save to database with filtering and deduplication
+            await self._save_to_database(jobs)
+            
+            # Keep JSON backup for compatibility
             self._save_jobs(jobs)
         else:
             print("⚠️ Aucune offre trouvée")
@@ -182,6 +188,24 @@ class ScraperBase(ABC):
         
         return jobs
     
+    async def _save_to_database(self, jobs: List[Job]) -> None:
+        """Save jobs to database with filtering and deduplication"""
+        try:
+            new_jobs, filtered_count = await job_manager.process_scraped_jobs(
+                jobs=jobs,
+                category=self.job_type,
+                max_age_days=30  # Only jobs from last 30 days
+            )
+            
+            if new_jobs:
+                print(f"💾 Database: {len(new_jobs)} nouveaux jobs sauvegardés")
+            if filtered_count > 0:
+                print(f"🔍 Database: {filtered_count} jobs filtrés (anciens/doublons)")
+                
+        except Exception as exc:
+            print(f"❌ Erreur sauvegarde database: {exc}")
+            print("📄 Continuons avec la sauvegarde JSON...")
+    
     def _save_jobs(self, jobs: List[Job]) -> None:
         """Sauvegarde les jobs en JSON"""
         output_path = Path(f"jobs_{self.filename_prefix}.json")
@@ -194,33 +218,10 @@ class ScraperBase(ABC):
         print(f"💾 {len(jobs)} jobs sauvegardés dans {output_path}")
     
     def _save_empty_file(self) -> None:
-        """Sauvegarde un fichier vide en cas d'échec"""
+        """Sauvegarde un fichier vide en cas d'échec (backup compatibility)"""
         output_path = Path(f"jobs_{self.filename_prefix}.json")
         
         with output_path.open('w', encoding='utf-8') as f:
             json.dump([], f)
         
-        print(f"📄 Fichier vide créé: {output_path}")
-    
-    @classmethod
-    def load_jobs(cls) -> List[Job]:
-        """Charge les jobs depuis le fichier JSON"""
-        # Utilise la valeur de filename_prefix de la classe
-        filename_prefix = getattr(cls, 'filename_prefix', 'jobs')
-        file_path = Path(f"jobs_{filename_prefix}.json")
-        
-        if not file_path.exists():
-            print(f"⚠️ Fichier de jobs introuvable: {file_path}")
-            return []
-        
-        try:
-            with file_path.open('r', encoding='utf-8') as f:
-                data = json.load(f)
-            
-            jobs = [Job(**job_data) for job_data in data]
-            print(f"📂 {len(jobs)} jobs chargés depuis {file_path}")
-            return jobs
-            
-        except Exception as exc:
-            print(f"❌ Erreur chargement jobs de {file_path}: {str(exc)}")
-            return []
+        print(f"📄 Fichier backup vide créé: {output_path}")

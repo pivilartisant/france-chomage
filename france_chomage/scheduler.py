@@ -1,120 +1,94 @@
 """
-Simple scheduler like the original v1.0
+Scheduler principal pour le bot France Chômage - Version corrigée
 """
+import asyncio
 import schedule
 import time
-import asyncio
 from france_chomage.config import settings
 from france_chomage.scraping import CommunicationScraper, DesignScraper, RestaurationScraper
 from france_chomage.telegram.bot import telegram_bot
+from france_chomage.database.connection import initialize_database
 
-# Variable globale pour collecter les statistiques
+# Variables globales pour les statistiques
 job_stats = {}
 
-def run_communication_jobs():
+async def run_communication_jobs():
     """Scrape et envoie les offres de communication"""
-    print("🎯 Lancement des offres communication...")
+    print("📢 Lancement des offres communication...")
     
-    async def async_communication():
-        try:
-            print("📡 Scraping communication en cours...")
-            scraper = CommunicationScraper()
-            jobs = await scraper.scrape()
-            
-            if not jobs:
-                print("⚠️ Aucune offre communication trouvée")
-                return
-            
-            print(f"📦 {len(jobs)} offres trouvées")
-            
-            print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_communication_topic_id,
-                job_type="communication"
-            )
-            
-            print(f"✅ {sent_count} offres communication envoyées")
-            
-            # Sauvegarder les stats
-            job_stats['communication'] = {'jobs_sent': sent_count}
-            
-        except Exception as e:
-            print(f"❌ Erreur communication: {e}")
-            job_stats['communication'] = {'jobs_sent': 0, 'error': str(e)}
-    
-    # Run async function
-    asyncio.run(async_communication())
+    try:
+        print("📡 Scraping communication en cours...")
+        scraper = CommunicationScraper()
+        jobs = await scraper.scrape()
+        
+        print(f"📦 {len(jobs)} offres scrapées")
+        
+        print("📤 Envoi vers Telegram...")
+        sent_count = await telegram_bot.send_jobs_from_database(
+            category="communication",
+            topic_id=settings.telegram_communication_topic_id
+        )
+        
+        print(f"✅ {sent_count} nouvelles offres communication envoyées")
+        
+        # Sauvegarder les stats
+        job_stats['communication'] = {'jobs_sent': sent_count}
+        
+    except Exception as e:
+        print(f"❌ Erreur communication: {e}")
+        job_stats['communication'] = {'jobs_sent': 0, 'error': str(e)}
 
-def run_design_jobs():
+async def run_design_jobs():
     """Scrape et envoie les offres de design"""
     print("🎨 Lancement des offres design...")
     
-    async def async_design():
-        try:
-            print("📡 Scraping design en cours...")
-            scraper = DesignScraper()
-            jobs = await scraper.scrape()
-            
-            if not jobs:
-                print("⚠️ Aucune offre design trouvée")
-                return
-            
-            print(f"📦 {len(jobs)} offres trouvées")
-            
-            print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_design_topic_id,
-                job_type="design"
-            )
-            
-            print(f"✅ {sent_count} offres design envoyées")
-            
-            # Sauvegarder les stats
-            job_stats['design'] = {'jobs_sent': sent_count}
-            
-        except Exception as e:
-            print(f"❌ Erreur design: {e}")
-            job_stats['design'] = {'jobs_sent': 0, 'error': str(e)}
-    
-    # Run async function
-    asyncio.run(async_design())
+    try:
+        print("📡 Scraping design en cours...")
+        scraper = DesignScraper()
+        jobs = await scraper.scrape()
+        
+        print(f"📦 {len(jobs)} offres scrapées")
+        
+        print("📤 Envoi vers Telegram...")
+        sent_count = await telegram_bot.send_jobs_from_database(
+            category="design",
+            topic_id=settings.telegram_design_topic_id
+        )
+        
+        print(f"✅ {sent_count} nouvelles offres design envoyées")
+        
+        # Sauvegarder les stats
+        job_stats['design'] = {'jobs_sent': sent_count}
+        
+    except Exception as e:
+        print(f"❌ Erreur design: {e}")
+        job_stats['design'] = {'jobs_sent': 0, 'error': str(e)}
 
-def run_restauration_jobs():
+async def run_restauration_jobs():
     """Scrape et envoie les offres de restauration"""
     print("🍽️ Lancement des offres restauration...")
     
-    async def async_restauration():
-        try:
-            print("📡 Scraping restauration en cours...")
-            scraper = RestaurationScraper()
-            jobs = await scraper.scrape()
-            
-            if not jobs:
-                print("⚠️ Aucune offre restauration trouvée")
-                return
-            
-            print(f"📦 {len(jobs)} offres trouvées")
-            
-            print("📤 Envoi vers Telegram...")
-            sent_count = await telegram_bot.send_jobs(
-                jobs=jobs,
-                topic_id=settings.telegram_restauration_topic_id,
-                job_type="restauration"
-            )
-            
-            print(f"✅ {sent_count} offres restauration envoyées")
-            
-            # Sauvegarder les stats
-            job_stats['restauration'] = {'jobs_sent': sent_count}
-            
-        except Exception as e:
-            print(f"❌ Erreur restauration: {e}")
-            job_stats['restauration'] = {'jobs_sent': 0, 'error': str(e)}
-    
-    # Run async function
-    asyncio.run(async_restauration())
+    try:
+        print("📡 Scraping restauration en cours...")
+        scraper = RestaurationScraper()
+        jobs = await scraper.scrape()
+        
+        print(f"📦 {len(jobs)} offres scrapées")
+        
+        print("📤 Envoi vers Telegram...")
+        sent_count = await telegram_bot.send_jobs_from_database(
+            category="restauration",
+            topic_id=settings.telegram_restauration_topic_id
+        )
+        
+        print(f"✅ {sent_count} nouvelles offres restauration envoyées")
+        
+        # Sauvegarder les stats
+        job_stats['restauration'] = {'jobs_sent': sent_count}
+        
+    except Exception as e:
+        print(f"❌ Erreur restauration: {e}")
+        job_stats['restauration'] = {'jobs_sent': 0, 'error': str(e)}
 
 async def send_update_summary():
     """Envoie un résumé des statistiques vers le topic général"""
@@ -123,45 +97,92 @@ async def send_update_summary():
         await telegram_bot.send_update_summary(job_stats)
         # Réinitialiser les stats après envoi
         job_stats.clear()
-    else:
-        print("⚠️ Aucune statistique à envoyer")
 
-def run_update_summary():
-    """Wrapper synchrone pour envoyer le résumé"""
-    asyncio.run(send_update_summary())
+# Wrapper synchrone pour les jobs schedulés
+def sync_communication_jobs():
+    """Wrapper synchrone pour communication"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
+        loop.run_until_complete(run_communication_jobs())
+    finally:
+        loop.close()
 
-# Schedule jobs
-for hour in settings.communication_hours:
-    schedule.every().day.at(f"{hour:02d}:00").do(run_communication_jobs)
-    print(f"📅 Communication programmée à {hour:02d}:00")
+def sync_design_jobs():
+    """Wrapper synchrone pour design"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
+        loop.run_until_complete(run_design_jobs())
+    finally:
+        loop.close()
 
-for hour in settings.design_hours:
-    schedule.every().day.at(f"{hour:02d}:00").do(run_design_jobs)
-    print(f"🎨 Design programmé à {hour:02d}:00")
+def sync_restauration_jobs():
+    """Wrapper synchrone pour restauration"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
+        loop.run_until_complete(run_restauration_jobs())
+    finally:
+        loop.close()
 
-for hour in settings.restauration_hours:
-    schedule.every().day.at(f"{hour:02d}:00").do(run_restauration_jobs)
-    print(f"🍽️ Restauration programmée à {hour:02d}:00")
-
-for hour in settings.update_hours:
-    schedule.every().day.at(f"{hour:02d}:00").do(run_update_summary)
-    print(f"📊 Résumé général programmée à {hour:02d}:00")
-
-print("🤖 Planificateur démarré.")
-
-# Exécute immédiatement si configuré
-if not settings.skip_init_job:
-    print("🚀 Exécution immédiate des jobs au démarrage...")
-    run_communication_jobs()
-    run_design_jobs()
-    run_restauration_jobs()
-else:
-    print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
-
-print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
+def sync_update_summary():
+    """Wrapper synchrone pour résumé"""
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        # Reset database connection for this loop
+        from france_chomage.database import connection
+        connection.engine = None
+        connection.async_session_factory = None
+        loop.run_until_complete(send_update_summary())
+    finally:
+        loop.close()
 
 def main():
-    """Point d'entrée principal"""
+    """Point d'entrée principal - Synchrone"""
+    # Initialize database
+    initialize_database()
+
+    # Planification des jobs
+    schedule.every().day.at("17:00").do(sync_communication_jobs).tag('communication')
+    schedule.every().day.at("18:00").do(sync_design_jobs).tag('design')
+    schedule.every().day.at("19:00").do(sync_restauration_jobs).tag('restauration')
+
+    # Résumé envoyé après chaque job avec délai
+    schedule.every().day.at("17:05").do(sync_update_summary).tag('summary')
+    schedule.every().day.at("18:05").do(sync_update_summary).tag('summary')
+    schedule.every().day.at("19:05").do(sync_update_summary).tag('summary')
+
+    print("📅 Jobs planifiés:")
+    print("📢 Communication: 17:00")
+    print("🎨 Design: 18:00")
+    print("🍽️ Restauration: 19:00")
+    print("📊 Résumés: 17:05, 18:05, 19:05")
+
+    # Exécution immédiate en cas de démarrage (sauf si désactivé)
+    if not settings.skip_init_job:
+        print("\n🚀 Exécution des jobs de démarrage...")
+        sync_communication_jobs()
+        sync_design_jobs()
+        sync_restauration_jobs()
+    else:
+        print("⏭️ Jobs de démarrage ignorés (SKIP_INIT_JOB=1)")
+
+    print("\n⏰ Planification activée. Appuyez sur Ctrl+C pour arrêter.")
+
     try:
         while True:
             schedule.run_pending()
