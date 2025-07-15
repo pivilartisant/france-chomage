@@ -27,6 +27,7 @@ python -c "
 import os
 import asyncio
 from france_chomage.database import connection
+from sqlalchemy import text
 
 async def test_connection():
     try:
@@ -35,7 +36,7 @@ async def test_connection():
             raise RuntimeError('Database engine not initialized')
         
         async with connection.engine.begin() as conn:
-            result = await conn.execute('SELECT 1')
+            result = await conn.execute(text('SELECT 1'))
             print('✅ Database connection successful')
             return True
     except Exception as e:
