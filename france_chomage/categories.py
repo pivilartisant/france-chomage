@@ -14,10 +14,12 @@ class CategoryConfig:
     name: str
     search_terms: str
     telegram_topic_id: int
-    schedule_hour: int
+    schedule_hour: int  # Deprecated - use scrape_hours and send_hours
     enabled: bool = True
     custom_scraper_class: Optional[str] = None
     max_results: Optional[int] = None
+    scrape_hours: Optional[List[int]] = None
+    send_hours: Optional[List[int]] = None
     
     def __post_init__(self):
         """Validate configuration after initialization"""
@@ -25,10 +27,30 @@ class CategoryConfig:
             raise ValueError("Category name cannot be empty")
         if not self.search_terms:
             raise ValueError("Search terms cannot be empty")
-        if not (0 <= self.schedule_hour <= 23):
-            raise ValueError("Schedule hour must be between 0 and 23")
         if self.telegram_topic_id <= 0:
             raise ValueError("Telegram topic ID must be positive")
+        
+        # Handle backward compatibility and new format
+        if self.scrape_hours is None and self.send_hours is None:
+            # Legacy format - use schedule_hour for both
+            if not (0 <= self.schedule_hour <= 23):
+                raise ValueError("Schedule hour must be between 0 and 23")
+            self.scrape_hours = [self.schedule_hour]
+            self.send_hours = [self.schedule_hour]
+        else:
+            # New format - validate separate hours
+            if self.scrape_hours is None:
+                self.scrape_hours = [self.schedule_hour]
+            if self.send_hours is None:
+                self.send_hours = [self.schedule_hour]
+            
+            # Validate hours
+            for hour in self.scrape_hours:
+                if not (0 <= hour <= 23):
+                    raise ValueError(f"Scrape hour {hour} must be between 0 and 23")
+            for hour in self.send_hours:
+                if not (0 <= hour <= 23):
+                    raise ValueError(f"Send hour {hour} must be between 0 and 23")
 
 
 class CategoryManager:
@@ -59,10 +81,12 @@ class CategoryManager:
                     name=name,
                     search_terms=config['search_terms'],
                     telegram_topic_id=config['telegram_topic_id'],
-                    schedule_hour=config['schedule_hour'],
+                    schedule_hour=config.get('schedule_hour', 12),  # Default fallback
                     enabled=config.get('enabled', True),
                     custom_scraper_class=config.get('custom_scraper_class'),
-                    max_results=config.get('max_results')
+                    max_results=config.get('max_results'),
+                    scrape_hours=config.get('scrape_hours'),
+                    send_hours=config.get('send_hours')
                 )
                 self._categories[name] = category_config
             
@@ -86,11 +110,21 @@ class CategoryManager:
             duplicates = [tid for tid in set(topic_ids) if topic_ids.count(tid) > 1]
             raise ValueError(f"Duplicate Telegram topic IDs found: {duplicates}")
         
-        # Check for conflicting schedule hours (optional warning)
-        schedule_hours = [cat.schedule_hour for cat in self._categories.values() if cat.enabled]
-        if len(schedule_hours) != len(set(schedule_hours)):
-            duplicates = [hour for hour in set(schedule_hours) if schedule_hours.count(hour) > 1]
-            print(f"⚠️ Warning: Multiple categories scheduled at same hour: {duplicates}")
+        # Check for conflicting scrape/send hours (optional warning)
+        all_scrape_hours = []
+        all_send_hours = []
+        for cat in self._categories.values():
+            if cat.enabled:
+                all_scrape_hours.extend(cat.scrape_hours)
+                all_send_hours.extend(cat.send_hours)
+        
+        if len(all_scrape_hours) != len(set(all_scrape_hours)):
+            duplicates = [hour for hour in set(all_scrape_hours) if all_scrape_hours.count(hour) > 1]
+            print(f"⚠️ Warning: Multiple categories scheduled to scrape at same hour: {duplicates}")
+        
+        if len(all_send_hours) != len(set(all_send_hours)):
+            duplicates = [hour for hour in set(all_send_hours) if all_send_hours.count(hour) > 1]
+            print(f"⚠️ Warning: Multiple categories scheduled to send at same hour: {duplicates}")
         
         # Validation complete - using categories.yml as single source of truth
         print("💡 All topic IDs are managed through categories.yml")

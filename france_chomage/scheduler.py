@@ -15,22 +15,42 @@ from france_chomage.database.connection import initialize_database
 job_stats: Dict[str, Dict[str, Any]] = {}
 
 
-async def run_category_job(category_name: str) -> None:
-    """Generic job runner for any category"""
+async def run_scrape_job(category_name: str) -> None:
+    """Run scraping job for a category"""
     try:
         # Get category configuration
         category_config = category_manager.get_category(category_name)
         
-        print(f"🎯 Starting {category_name} jobs...")
+        print(f"🎯 Starting scraping for {category_name}...")
         print(f"🔍 Search terms: {category_config.search_terms}")
-        print(f"📡 Topic ID: {category_config.telegram_topic_id}")
         
         # Create and run scraper
         print(f"📡 Scraping {category_name} in progress...")
         scraper = create_category_scraper(category_config)
         jobs = await scraper.scrape()
         
-        print(f"📦 {len(jobs)} {category_name} jobs scraped")
+        print(f"📦 {len(jobs)} {category_name} jobs scraped and saved to database")
+        
+        # Save statistics for scraping
+        if category_name not in job_stats:
+            job_stats[category_name] = {}
+        job_stats[category_name]['jobs_scraped'] = len(jobs)
+        
+    except Exception as e:
+        print(f"❌ Error scraping {category_name}: {e}")
+        if category_name not in job_stats:
+            job_stats[category_name] = {}
+        job_stats[category_name]['scrape_error'] = str(e)
+
+
+async def run_send_job(category_name: str) -> None:
+    """Run sending job for a category"""
+    try:
+        # Get category configuration
+        category_config = category_manager.get_category(category_name)
+        
+        print(f"🎯 Starting sending for {category_name}...")
+        print(f"📡 Topic ID: {category_config.telegram_topic_id}")
         
         # Send to Telegram
         print(f"📤 Sending to Telegram...")
@@ -41,12 +61,25 @@ async def run_category_job(category_name: str) -> None:
         
         print(f"✅ {sent_count} new {category_name} jobs sent")
         
-        # Save statistics
-        job_stats[category_name] = {'jobs_sent': sent_count}
+        # Save statistics for sending
+        if category_name not in job_stats:
+            job_stats[category_name] = {}
+        job_stats[category_name]['jobs_sent'] = sent_count
         
     except Exception as e:
-        print(f"❌ Error in {category_name}: {e}")
-        job_stats[category_name] = {'jobs_sent': 0, 'error': str(e)}
+        print(f"❌ Error sending {category_name}: {e}")
+        if category_name not in job_stats:
+            job_stats[category_name] = {}
+        job_stats[category_name]['send_error'] = str(e)
+
+
+async def run_category_job(category_name: str) -> None:
+    """Legacy combined job runner for backward compatibility"""
+    print(f"⚠️ Using legacy combined job runner for {category_name}")
+    print("💡 Consider using separate scrape and send jobs for better reliability")
+    
+    await run_scrape_job(category_name)
+    await run_send_job(category_name)
 
 
 async def send_update_summary() -> None:
@@ -58,7 +91,7 @@ async def send_update_summary() -> None:
         job_stats.clear()
 
 
-def create_sync_wrapper(category_name: str):
+def create_sync_wrapper(category_name: str, job_type: str = 'combined'):
     """Create a synchronous wrapper for async category job"""
     def sync_wrapper():
         loop = asyncio.new_event_loop()
@@ -68,7 +101,14 @@ def create_sync_wrapper(category_name: str):
             from france_chomage.database import connection
             connection.engine = None
             connection.async_session_factory = None
-            loop.run_until_complete(run_category_job(category_name))
+            
+            if job_type == 'scrape':
+                loop.run_until_complete(run_scrape_job(category_name))
+            elif job_type == 'send':
+                loop.run_until_complete(run_send_job(category_name))
+            else:
+                # Legacy combined job
+                loop.run_until_complete(run_category_job(category_name))
         finally:
             loop.close()
     
@@ -98,21 +138,28 @@ def schedule_categories() -> None:
             print("⚠️ No enabled categories found!")
             return
         
-        print("📅 Scheduling categories:")
+        print("📅 Scheduling categories with separate scrape and send jobs:")
         
-        # Schedule each category
+        # Schedule each category with separate scrape and send jobs
         for name, config in enabled_categories.items():
-            schedule_time = f"{config.schedule_hour:02d}:00"
-            sync_wrapper = create_sync_wrapper(name)
+            # Schedule scraping jobs
+            for scrape_hour in config.scrape_hours:
+                scrape_time = f"{scrape_hour:02d}:00"
+                scrape_wrapper = create_sync_wrapper(name, 'scrape')
+                schedule.every().day.at(scrape_time).do(scrape_wrapper).tag(f'{name}_scrape')
+                print(f"   {config.name}: scrape at {scrape_time}")
             
-            schedule.every().day.at(schedule_time).do(sync_wrapper).tag(name)
-            print(f"   {config.name}: {schedule_time}")
-            
-            # Schedule update summary 5 minutes after each job
-            summary_time = f"{config.schedule_hour:02d}:05"
-            schedule.every().day.at(summary_time).do(sync_update_summary).tag('summary')
+            # Schedule sending jobs
+            for send_hour in config.send_hours:
+                send_time = f"{send_hour:02d}:00"
+                send_wrapper = create_sync_wrapper(name, 'send')
+                schedule.every().day.at(send_time).do(send_wrapper).tag(f'{name}_send')
+                print(f"   {config.name}: send at {send_time}")
         
-        print(f"✅ {len(enabled_categories)} categories scheduled")
+        # Schedule update summary once per day at 23:59
+        schedule.every().day.at("23:59").do(sync_update_summary).tag('summary')
+        
+        print(f"✅ {len(enabled_categories)} categories scheduled with separate jobs")
         
     except Exception as e:
         print(f"❌ Error scheduling categories: {e}")
@@ -128,13 +175,23 @@ def run_startup_jobs() -> None:
     try:
         enabled_categories = category_manager.get_enabled_categories()
         print(f"\n🚀 Running startup jobs for {len(enabled_categories)} categories...")
+        print("📝 Using separate scrape and send operations...")
         
+        # First, run all scraping jobs
+        print("\n🔍 Phase 1: Scraping all categories...")
         for name in enabled_categories.keys():
-            print(f"\n--- Running {name} ---")
-            sync_wrapper = create_sync_wrapper(name)
-            sync_wrapper()
+            print(f"\n--- Scraping {name} ---")
+            scrape_wrapper = create_sync_wrapper(name, 'scrape')
+            scrape_wrapper()
         
-        print("\n✅ All startup jobs completed")
+        # Then, run all sending jobs
+        print("\n📤 Phase 2: Sending all categories...")
+        for name in enabled_categories.keys():
+            print(f"\n--- Sending {name} ---")
+            send_wrapper = create_sync_wrapper(name, 'send')
+            send_wrapper()
+        
+        print("\n✅ All startup jobs completed (scrape + send separated)")
         
     except Exception as e:
         print(f"❌ Error running startup jobs: {e}")

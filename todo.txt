@@ -1,3 +1,5 @@
 // scrape and send at differetnt times
 
+// no drop table 
+
 // better summary 
