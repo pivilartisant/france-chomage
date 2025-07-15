@@ -221,6 +221,48 @@ def run_startup_jobs() -> None:
     except Exception as e:
         print(f"❌ Error running startup jobs: {e}")
 
+def run_limited_startup_jobs() -> None:
+    """Run limited startup jobs as smoke test"""
+    try:
+        from france_chomage.database.connection import get_connection_info
+        print(f"🔍 Connection pool status: {get_connection_info()}")
+        
+        enabled_categories = category_manager.get_enabled_categories()
+        # Only test with 2 categories that are likely to have jobs
+        test_categories = ['communication', 'design']
+        
+        for cat_name in test_categories:
+            if cat_name in enabled_categories:
+                print(f"\n🧪 Testing {cat_name} category...")
+                try:
+                    # Test scraping
+                    scrape_wrapper = create_sync_wrapper(cat_name, 'scrape')
+                    scrape_wrapper()
+                    
+                    # Add delay to prevent connection conflicts
+                    import time
+                    time.sleep(2)
+                    
+                    # Test sending
+                    send_wrapper = create_sync_wrapper(cat_name, 'send')
+                    send_wrapper()
+                    
+                    print(f"✅ {cat_name} test completed")
+                    
+                except Exception as e:
+                    print(f"⚠️ {cat_name} test failed: {e}")
+                    continue
+                    
+                # Add delay between categories
+                import time
+                time.sleep(3)
+        
+        print(f"🔍 Final connection pool status: {get_connection_info()}")
+        print("✅ Limited startup jobs completed")
+        
+    except Exception as e:
+        print(f"❌ Error running limited startup jobs: {e}")
+
 
 def main():
     """Main scheduler entry point"""
@@ -244,9 +286,9 @@ def main():
         print(f"❌ Failed to schedule categories: {e}")
         return
     
-    # Skip startup jobs to avoid database connection overload
-    # run_startup_jobs()
-    print("⏭️ Skipping startup jobs (avoiding database connection overload)")
+    # Run limited startup jobs as smoke test
+    print("🧪 Running limited startup jobs as smoke test...")
+    run_limited_startup_jobs()
     
     print("\n⏰ Scheduler active. Press Ctrl+C to stop.")
     

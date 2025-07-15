@@ -60,7 +60,10 @@ def initialize_database(force_reinit: bool = False):
     if engine is None or force_reinit:
         if engine is not None:
             # Clean up existing engine
-            engine.dispose()
+            try:
+                engine.dispose()
+            except Exception:
+                pass  # Ignore disposal errors
         
         engine = create_engine()
         async_session_factory = async_sessionmaker(
@@ -68,6 +71,15 @@ def initialize_database(force_reinit: bool = False):
             class_=AsyncSession, 
             expire_on_commit=False
         )
+        print(f"🔧 Database initialized with pool size: {engine.pool.size()}")
+
+def get_connection_info():
+    """Get current connection pool information"""
+    if engine is None:
+        return "Database not initialized"
+    
+    pool = engine.pool
+    return f"Pool size: {pool.size()}, Checked out: {pool.checkedout()}, Overflow: {pool.overflow()}"
 
 async def get_session() -> AsyncSession:
     """Get async database session"""

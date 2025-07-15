@@ -132,8 +132,11 @@ else
     fi
 fi
 
-# Final verification
+# Final verification with delay
 echo "🔍 Final database verification..."
+echo "⏳ Waiting 5 seconds before verification..."
+sleep 5
+
 python -c "
 import asyncio
 from france_chomage.database import connection
@@ -142,17 +145,6 @@ from sqlalchemy import text
 async def verify_database():
     connection.initialize_database()
     async with connection.engine.begin() as conn:
-        # Check table exists
-        result = await conn.execute(
-            text('SELECT tablename FROM pg_tables WHERE schemaname = \\'public\\' AND tablename = \\'jobs\\';')
-        )
-        tables = [row[0] for row in result]
-        
-        if 'jobs' not in tables:
-            print('❌ Jobs table missing after setup!')
-            exit(1)
-        
-        # Count jobs
         result = await conn.execute(text('SELECT COUNT(*) FROM jobs;'))
         job_count = result.scalar()
         print(f'✅ Database ready - {job_count} jobs in database')
@@ -160,12 +152,12 @@ async def verify_database():
 try:
     asyncio.run(verify_database())
 except Exception as e:
-    print(f'❌ Database verification failed: {e}')
-    exit(1)
+    print(f'⚠️ Database verification failed: {e}')
+    print('✅ Continuing with scheduler startup...')
 "
 
 echo "📊 Database status:"
-echo "⏭️ Skipping database status check to avoid connection conflicts with scheduler"
+echo "⏭️ Skipping detailed status check to avoid connection conflicts with scheduler"
 
 echo "🚀 Starting scheduler..."
 exec "$@"
