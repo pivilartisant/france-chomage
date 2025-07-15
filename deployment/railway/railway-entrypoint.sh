@@ -43,14 +43,13 @@ async def test_connection():
         print(f'❌ Database connection failed: {e}')
         return False
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 try:
-    success = loop.run_until_complete(test_connection())
+    success = asyncio.run(test_connection())
     if not success:
         exit(1)
-finally:
-    loop.close()
+except Exception as e:
+    print(f'❌ Database test failed: {e}')
+    exit(1)
 "
 
 # Check if this is first deployment or migration needed
@@ -85,12 +84,11 @@ async def check_first_deployment():
             print(f'❌ Error checking database state: {e}')
             exit(1)
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 try:
-    loop.run_until_complete(check_first_deployment())
-finally:
-    loop.close()
+    asyncio.run(check_first_deployment())
+except Exception as e:
+    print(f'❌ Database state check failed: {e}')
+    exit(1)
 "
 
 # Read the deployment state
@@ -111,12 +109,11 @@ async def create_initial_schema():
         await conn.run_sync(Base.metadata.create_all)
     print('✅ Initial database schema created')
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 try:
-    loop.run_until_complete(create_initial_schema())
-finally:
-    loop.close()
+    asyncio.run(create_initial_schema())
+except Exception as e:
+    print(f'❌ Schema creation failed: {e}')
+    exit(1)
 "
     
     # Stamp database as being at head revision
@@ -160,12 +157,11 @@ async def verify_database():
         job_count = result.scalar()
         print(f'✅ Database ready - {job_count} jobs in database')
 
-loop = asyncio.new_event_loop()
-asyncio.set_event_loop(loop)
 try:
-    loop.run_until_complete(verify_database())
-finally:
-    loop.close()
+    asyncio.run(verify_database())
+except Exception as e:
+    print(f'❌ Database verification failed: {e}')
+    exit(1)
 "
 
 echo "📊 Database status:"
