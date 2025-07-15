@@ -32,7 +32,11 @@ def info():
         typer.echo("📂 Enabled Categories:")
         for name, category in categories.items():
             topic_id = settings.category_manager.get_topic_id(name)
-            typer.echo(f"  {name}: Topic ID {topic_id}, Schedule: {category.schedule_hour}:00")
+            scrape_times = ', '.join([f"{h:02d}:00" for h in category.scrape_hours])
+            send_times = ', '.join([f"{h:02d}:00" for h in category.send_hours])
+            typer.echo(f"  {name}: Topic ID {topic_id}")
+            typer.echo(f"    Scrape: {scrape_times}")
+            typer.echo(f"    Send: {send_times}")
     except Exception as e:
         typer.echo(f"❌ Error loading categories: {e}")
         
