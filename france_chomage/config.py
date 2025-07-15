@@ -14,9 +14,10 @@ class Settings:
         # Telegram
         self.telegram_bot_token = os.getenv("TELEGRAM_BOT_TOKEN")
         self.telegram_group_id = os.getenv("TELEGRAM_GROUP_ID")
-        self.telegram_communication_topic_id = int(os.getenv("TELEGRAM_COMMUNICATION_TOPIC_ID", "3"))
-        self.telegram_design_topic_id = int(os.getenv("TELEGRAM_DESIGN_TOPIC_ID", "40"))
-        self.telegram_restauration_topic_id = int(os.getenv("TELEGRAM_RESTAURATION_TOPIC_ID", "326"))
+        
+        # Topic IDs are now managed by CategoryManager
+        # These properties are kept for backward compatibility
+        self._category_manager = None
         
         # Scraping
         self.results_wanted = int(os.getenv("RESULTS_WANTED", "15"))
@@ -25,9 +26,6 @@ class Settings:
         
         # Scheduling  
         self.skip_init_job = int(os.getenv("SKIP_INIT_JOB", "0"))
-        self.communication_hours = [17]
-        self.design_hours = [18]
-        self.restauration_hours = [19]
         self.update_hours = [20]
         
         # Retry configuration
@@ -39,6 +37,29 @@ class Settings:
         # Anti-detection settings
         self.force_docker_mode = os.getenv("FORCE_DOCKER_MODE", "0") == "1"  # Force LinkedIn only
         self.indeed_max_results = int(os.getenv("INDEED_MAX_RESULTS", "10"))  # Limit Indeed results
+    
+    @property
+    def category_manager(self):
+        """Lazy load category manager"""
+        if self._category_manager is None:
+            from .categories import category_manager
+            self._category_manager = category_manager
+        return self._category_manager
+    
+    @property
+    def telegram_communication_topic_id(self) -> int:
+        """Get communication topic ID from categories.yml"""
+        return self.category_manager.get_topic_id('communication')
+    
+    @property
+    def telegram_design_topic_id(self) -> int:
+        """Get design topic ID from categories.yml"""
+        return self.category_manager.get_topic_id('design')
+    
+    @property
+    def telegram_restauration_topic_id(self) -> int:
+        """Get restauration topic ID from categories.yml"""
+        return self.category_manager.get_topic_id('restauration')
 
 # Instance globale
 settings = Settings()

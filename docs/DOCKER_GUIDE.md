@@ -104,10 +104,9 @@ The docker-compose.yml reads from your `.env` file:
 ```env
 TELEGRAM_BOT_TOKEN=your_token
 TELEGRAM_GROUP_ID=your_group_id
-TELEGRAM_COMMUNICATION_TOPIC_ID=3
-TELEGRAM_DESIGN_TOPIC_ID=40
-TELEGRAM_RESTAURATION_TOPIC_ID=326
 ```
+
+**Note:** Topic IDs are now managed through `categories.yml` file automatically.
 
 ### Scaling
 ```bash

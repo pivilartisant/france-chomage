@@ -36,9 +36,7 @@ services:
       # Telegram configuration (from .env file)
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
       TELEGRAM_GROUP_ID: ${TELEGRAM_GROUP_ID}
-      TELEGRAM_COMMUNICATION_TOPIC_ID: ${TELEGRAM_COMMUNICATION_TOPIC_ID:-3}
-      TELEGRAM_DESIGN_TOPIC_ID: ${TELEGRAM_DESIGN_TOPIC_ID:-40}
-      TELEGRAM_RESTAURATION_TOPIC_ID: ${TELEGRAM_RESTAURATION_TOPIC_ID:-326}
+      # Topic IDs are managed through categories.yml file
       
       # Scraping configuration
       RESULTS_WANTED: ${RESULTS_WANTED:-20}
