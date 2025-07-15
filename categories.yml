@@ -66,7 +66,7 @@ categories:
   audiovisuel:
     enabled: true
     schedule_hour: 12
-    search_terms: audiovisuel OR vidéo OR montage OR tournage OR réalisateur
+    search_terms: audiovisuel OR vidéo OR montage OR tournage OR réalisateur OR réalisatrice
     telegram_topic_id: 549
     scrape_hours:
     - 7

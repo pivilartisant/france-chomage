@@ -79,7 +79,7 @@ python -m france_chomage db --help
 
 ### Database Management
 ```bash
-# Initialize database tables
+# Initialize database tables (safe, preserves existing data)
 make db-init
 python -m france_chomage db init
 
@@ -94,6 +94,29 @@ python -m france_chomage db status
 # Clean up old jobs (90+ days)
 make db-cleanup
 python -m france_chomage db cleanup --days 90
+
+# Backup database to JSON files
+make db-backup
+python -m france_chomage db backup
+```
+
+### Migration Management
+```bash
+# Check migration status
+make migrate-check
+python -m france_chomage migrate check
+
+# Apply pending migrations
+make migrate-upgrade
+python -m france_chomage migrate upgrade
+
+# Create new migration
+make migrate-create
+python -m france_chomage migrate revision -m "Description"
+
+# Show migration history
+make migrate-history
+python -m france_chomage migrate history
 ```
 
 ### Docker
