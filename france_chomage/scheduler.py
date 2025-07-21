@@ -82,13 +82,13 @@ async def run_category_job(category_name: str) -> None:
     await run_send_job(category_name)
 
 
-async def send_update_summary() -> None:
-    """Send summary of job statistics to general topic"""
-    if job_stats:
-        print("📊 Sending update summary...")
-        await telegram_bot.send_update_summary(job_stats)
-        # Clear stats after sending
-        job_stats.clear()
+# async def send_update_summary() -> None:
+#     """Send summary of job statistics to general topic"""
+#     if job_stats:
+#         print("📊 Sending update summary...")
+#         await telegram_bot.send_update_summary(job_stats)
+#         # Clear stats after sending
+#         job_stats.clear()
 
 
 # Global event loop for all async operations
@@ -145,15 +145,15 @@ def create_sync_wrapper(category_name: str, job_type: str = 'combined'):
     return sync_wrapper
 
 
-def sync_update_summary():
-    """Synchronous wrapper for update summary"""
-    loop = get_or_create_event_loop()
-    try:
-        future = asyncio.run_coroutine_threadsafe(send_update_summary(), loop)
-        future.result(timeout=300)  # 5 minute timeout
-    except Exception as e:
-        print(f"❌ Error in update summary: {e}")
-        raise
+# def sync_update_summary():
+#     """Synchronous wrapper for update summary"""
+#     loop = get_or_create_event_loop()
+#     try:
+#         future = asyncio.run_coroutine_threadsafe(send_update_summary(), loop)
+#         future.result(timeout=300)  # 5 minute timeout
+#     except Exception as e:
+#         print(f"❌ Error in update summary: {e}")
+#         raise
 
 
 def schedule_categories() -> None:
@@ -182,7 +182,7 @@ def schedule_categories() -> None:
                 schedule.every().day.at(send_time).do(send_wrapper).tag(f'{name}_send')
         
         # Schedule update summary once per day at 23:59
-        schedule.every().day.at("23:59").do(sync_update_summary).tag('summary')
+        # schedule.every().day.at("23:59").do(sync_update_summary).tag('summary')
         
         print(f"✅ {len(enabled_categories)} categories scheduled with separate jobs")
         
