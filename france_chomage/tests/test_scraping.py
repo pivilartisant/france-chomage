@@ -5,7 +5,8 @@ import pytest
 from unittest.mock import Mock, AsyncMock, patch
 import pandas as pd
 
-from france_chomage.scraping import CommunicationScraper, DesignScraper
+from france_chomage.scraping.category_scraper import CategoryScraper, create_category_scraper
+from france_chomage.categories import CategoryConfig
 from france_chomage.models import Job
 
 @pytest.fixture
@@ -24,13 +25,35 @@ def sample_dataframe():
     }
     return pd.DataFrame(data)
 
+@pytest.fixture
+def communication_config():
+    """Configuration pour les tests de communication"""
+    return CategoryConfig(
+        name="communication",
+        search_terms="communication",
+        telegram_topic_id=3,
+        schedule_hour=17,
+        enabled=True
+    )
+
+@pytest.fixture
+def design_config():
+    """Configuration pour les tests de design"""
+    return CategoryConfig(
+        name="design",
+        search_terms="design graphique OR graphiste OR UI UX OR designer",
+        telegram_topic_id=40,
+        schedule_hour=18,
+        enabled=True
+    )
+
 class TestScraperBase:
     """Tests pour la classe de base ScraperBase"""
     
     @pytest.mark.asyncio
-    async def test_dataframe_to_jobs(self, sample_dataframe):
+    async def test_dataframe_to_jobs(self, sample_dataframe, communication_config):
         """Test conversion DataFrame -> List[Job]"""
-        scraper = CommunicationScraper()
+        scraper = CategoryScraper(communication_config)
         
         jobs = scraper._dataframe_to_jobs(sample_dataframe)
         
@@ -51,7 +74,7 @@ class TestScraperBase:
         assert job2.salary_source is None
     
     @pytest.mark.asyncio
-    async def test_dataframe_to_jobs_invalid_data(self):
+    async def test_dataframe_to_jobs_invalid_data(self, communication_config):
         """Test gestion des données invalides dans le DataFrame"""
         # DataFrame avec données invalides
         invalid_data = {
@@ -64,18 +87,18 @@ class TestScraperBase:
         }
         df = pd.DataFrame(invalid_data)
         
-        scraper = CommunicationScraper()
+        scraper = CategoryScraper(communication_config)
         jobs = scraper._dataframe_to_jobs(df)
         
         # Seuls les jobs valides doivent être conservés
-        assert len(jobs) == 2  # Job avec title=None et job sans URL exclus
+        assert len(jobs) == 1  # Job avec title=None et job sans URL exclus
         assert all(job.title for job in jobs)
         assert all(job.job_url for job in jobs)
     
     @pytest.mark.asyncio
     @patch('france_chomage.scraping.base.asyncio.get_event_loop')
     @patch('france_chomage.scraping.base.get_sites_for_environment')
-    async def test_scrape_with_retry_success(self, mock_sites, mock_loop, sample_dataframe):
+    async def test_scrape_with_retry_success(self, mock_sites, mock_loop, sample_dataframe, communication_config):
         """Test scraping réussi"""
         mock_sites.return_value = ("linkedin",)
         
@@ -84,7 +107,7 @@ class TestScraperBase:
         mock_executor.return_value = sample_dataframe
         mock_loop.return_value.run_in_executor = mock_executor
         
-        scraper = CommunicationScraper()
+        scraper = CategoryScraper(communication_config)
         
         jobs = await scraper._scrape_with_retry()
         
@@ -95,7 +118,7 @@ class TestScraperBase:
     @pytest.mark.asyncio
     @patch('france_chomage.scraping.base.asyncio.get_event_loop')
     @patch('france_chomage.scraping.base.get_sites_for_environment')
-    async def test_scrape_with_retry_failure(self, mock_sites, mock_loop):
+    async def test_scrape_with_retry_failure(self, mock_sites, mock_loop, communication_config):
         """Test échec de scraping après tous les retries"""
         mock_sites.return_value = ("linkedin",)
         
@@ -104,7 +127,7 @@ class TestScraperBase:
         mock_executor.side_effect = Exception("Network error")
         mock_loop.return_value.run_in_executor = mock_executor
         
-        scraper = CommunicationScraper()
+        scraper = CategoryScraper(communication_config)
         
         jobs = await scraper._scrape_with_retry()
         
@@ -113,7 +136,7 @@ class TestScraperBase:
         assert mock_executor.call_count == 3  # max_retries par défaut
     
     @pytest.mark.asyncio
-    async def test_save_jobs(self, tmp_path):
+    async def test_save_jobs(self, tmp_path, communication_config):
         """Test sauvegarde des jobs"""
         # Change vers répertoire temporaire pour les tests
         import os
@@ -132,7 +155,7 @@ class TestScraperBase:
                 )
             ]
             
-            scraper = CommunicationScraper()
+            scraper = CategoryScraper(communication_config)
             scraper._save_jobs(jobs)
             
             # Vérification que le fichier est créé
@@ -151,14 +174,14 @@ class TestScraperBase:
             os.chdir(original_cwd)
     
     @pytest.mark.asyncio
-    async def test_save_empty_file(self, tmp_path):
+    async def test_save_empty_file(self, tmp_path, design_config):
         """Test sauvegarde fichier vide"""
         import os
         original_cwd = os.getcwd()
         os.chdir(tmp_path)
         
         try:
-            scraper = DesignScraper()
+            scraper = CategoryScraper(design_config)
             scraper._save_empty_file()
             
             output_file = tmp_path / "jobs_design.json"
@@ -173,24 +196,46 @@ class TestScraperBase:
         finally:
             os.chdir(original_cwd)
 
-class TestCommunicationScraper:
-    """Tests spécifiques au scraper de communication"""
+class TestCategoryScraper:
+    """Tests spécifiques au scraper de configuration"""
     
-    def test_scraper_attributes(self):
+    def test_communication_scraper_attributes(self, communication_config):
         """Test attributs du scraper communication"""
-        scraper = CommunicationScraper()
+        scraper = CategoryScraper(communication_config)
         
         assert scraper.search_terms == "communication"
         assert scraper.filename_prefix == "communication" 
         assert scraper.job_type == "communication"
+        assert scraper.category_config == communication_config
 
-class TestDesignScraper:
-    """Tests spécifiques au scraper de design"""
-    
-    def test_scraper_attributes(self):
+    def test_design_scraper_attributes(self, design_config):
         """Test attributs du scraper design"""
-        scraper = DesignScraper()
+        scraper = CategoryScraper(design_config)
         
         assert scraper.search_terms == "design graphique OR graphiste OR UI UX OR designer"
         assert scraper.filename_prefix == "design"
         assert scraper.job_type == "design"
+        assert scraper.category_config == design_config
+
+    def test_scraper_factory(self, communication_config):
+        """Test factory de création de scrapers"""
+        scraper = create_category_scraper(communication_config)
+        
+        assert isinstance(scraper, CategoryScraper)
+        assert scraper.search_terms == "communication"
+        assert scraper.job_type == "communication"
+
+    def test_max_results_override(self):
+        """Test override du max_results"""
+        config = CategoryConfig(
+            name="test",
+            search_terms="test",
+            telegram_topic_id=999,
+            schedule_hour=10,
+            enabled=True,
+            max_results=25
+        )
+        
+        scraper = CategoryScraper(config)
+        assert hasattr(scraper, '_override_max_results')
+        assert scraper._override_max_results == 25

@@ -1,0 +1,216 @@
+categories:
+  art_culture:
+    enabled: true
+    schedule_hour: 16
+    search_terms: art OR musée OR théâtre OR galerie OR création artistique
+    telegram_topic_id: 520
+    scrape_hours:
+    - 5
+    send_hours:
+    - 6
+  assistanat:
+    enabled: true
+    schedule_hour: 3
+    search_terms: assistant OR assistanat OR secrétaire OR assistant administratif
+    telegram_topic_id: 548
+    scrape_hours:
+    - 6
+    send_hours:
+    - 7
+  audiovisuel:
+    enabled: true
+    schedule_hour: 12
+    search_terms: audiovisuel OR vidéo OR montage OR tournage OR réalisateur OR réalisatrice OR motion
+    telegram_topic_id: 549
+    scrape_hours:
+    - 7
+    send_hours:
+    - 8
+  cafe_restauration_personnel:
+    enabled: true
+    schedule_hour: 17
+    search_terms: café OR barista OR serveur OR barman OR restauration rapide
+    telegram_topic_id: 539
+    scrape_hours:
+    - 9
+    send_hours:
+    - 10
+  communication:
+    enabled: true
+    schedule_hour: 12
+    search_terms: communication OR marketing OR relations publiques OR contenu
+    telegram_topic_id: 511
+    scrape_hours:
+    - 10
+    send_hours:
+    - 11
+  cosmetique:
+    enabled: true
+    schedule_hour: 0
+    search_terms: cosmétique OR beauté OR esthéticienne OR maquillage OR soins
+    telegram_topic_id: 551
+    scrape_hours:
+    - 13
+    send_hours:
+    - 14
+  design:
+    enabled: true
+    schedule_hour: 23
+    search_terms: design OR UX OR UI OR graphisme OR créatif OR designer graphique OR Direction Artistique
+    telegram_topic_id: 512
+    scrape_hours:
+    - 15
+    send_hours:
+    - 16
+  education:
+    enabled: true
+    schedule_hour: 10
+    search_terms: éducation OR enseignant OR professeur OR école OR pédagogique
+    telegram_topic_id: 516
+    scrape_hours:
+    - 16
+    send_hours:
+    - 17
+  environnement:
+    enabled: true
+    schedule_hour: 17
+    search_terms: énergie renouvelable OR solaire OR éolien OR gestion énergie OR
+      efficacité énergétique OR ingénierie énergétique OR environnement OR écologie OR développement durable OR biodiversité
+    telegram_topic_id: 521
+    scrape_hours:
+    - 20
+    send_hours:
+    - 21
+  jeu_video:
+    enabled: true
+    schedule_hour: 13
+    search_terms: jeu vidéo OR gaming OR développeur jeu OR game designer OR studio
+      de jeu
+    telegram_topic_id: 555
+    scrape_hours:
+    - 3
+    send_hours:
+    - 4
+  juridique:
+    enabled: true
+    schedule_hour: 20
+    search_terms: juridique OR avocat OR droit OR contrat OR législation
+    telegram_topic_id: 524
+    scrape_hours:
+    - 4
+    send_hours:
+    - 5
+  patrimoine_culture:
+    enabled: true
+    schedule_hour: 8
+    search_terms: culture OR patrimoine OR médiateur culturel OR archéologie OR bibliothèque
+    telegram_topic_id: 536
+    scrape_hours:
+    - 10
+    send_hours:
+    - 11
+  recherche_science:
+    enabled: true
+    schedule_hour: 22
+    search_terms: recherche OR laboratoire OR scientifique OR doctorat OR innovation
+    telegram_topic_id: 526
+    scrape_hours:
+    - 11
+    send_hours:
+    - 12
+  ressources_humaines:
+    enabled: true
+    schedule_hour: 19
+    search_terms: RH OR ressources humaines OR recrutement OR talent OR gestion du
+      personnel
+    telegram_topic_id: 523
+    scrape_hours:
+    - 12
+    send_hours:
+    - 13
+  restauration:
+    enabled: true
+    schedule_hour: 15
+    search_terms: restauration OR cuisinier OR chef OR serveur OR barman OR sommelier
+      OR commis
+    telegram_topic_id: 513
+    scrape_hours:
+    - 13
+    send_hours:
+    - 14
+  sante:
+    enabled: true
+    schedule_hour: 8
+    search_terms: santé OR hôpital OR hospitalier
+    telegram_topic_id: 514
+    scrape_hours:
+    - 14
+    send_hours:
+    - 15
+  service_client:
+    enabled: true
+    schedule_hour: 18
+    search_terms: service client OR support OR assistance OR relation client
+    telegram_topic_id: 522
+    scrape_hours:
+    - 16
+    send_hours:
+    - 17
+  services_personne:
+    enabled: true
+    schedule_hour: 18
+    search_terms: aide à domicile OR auxiliaire OR service à la personne OR soins
+      à domicile OR accompagnement OR assistance personne âgée OR
+      auxiliaire de vie
+    telegram_topic_id: 558
+    scrape_hours:
+    - 17
+    send_hours:
+    - 18
+  services_publics:
+    enabled: true
+    schedule_hour: 7
+    search_terms: fonction publique OR administration OR mairie OR collectivité OR
+      état OR territorial
+    telegram_topic_id: 535
+    scrape_hours:
+    - 18
+    send_hours:
+    - 19
+  technologie:
+    enabled: true
+    schedule_hour: 9
+    search_terms: développeur OR ingénieur logiciel OR tech OR informatique OR data
+    telegram_topic_id: 515
+    scrape_hours:
+    - 20
+    send_hours:
+    - 21
+  tourisme:
+    enabled: true
+    schedule_hour: 5
+    search_terms: tourisme OR voyage OR hôtel OR guide OR accueil touristique
+    telegram_topic_id: 529
+    scrape_hours:
+    - 21
+    send_hours:
+    - 22
+  transport_public:
+    enabled: true
+    schedule_hour: 10
+    search_terms: chauffeur bus OR conducteur train OR transport en commun OR RATP
+      OR SNCF
+    telegram_topic_id: 538
+    scrape_hours:
+    - 22
+    send_hours:
+    - 23
+  vente:
+    enabled: true
+    schedule_hour: 7
+    search_terms: vente OR commercial OR business developer OR représentant
+    telegram_topic_id: 527
+    scrape_hours:
+    - 0
+    send_hours:
+    - 1
