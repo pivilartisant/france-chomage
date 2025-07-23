@@ -98,8 +98,6 @@ categories:
     enabled: true
 ```
 
-To create forum topics automatically, use the scripts in `scripts/telegram/`.
-
 **Note:** Environment variables for topic IDs are no longer supported. All topic management is done through `categories.yml`.
 
 ## Validation

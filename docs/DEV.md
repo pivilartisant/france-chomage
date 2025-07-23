@@ -1,7 +1,7 @@
-# France Chômage Bot - Agent Guide
+# France Chômage Bot - Dev Guide
 
 ## Project Overview
-A French Telegram bot that scrapes job offers for communication, design, and restaurant jobs, then automatically posts them to specific Telegram topics. Now features PostgreSQL database storage with automatic duplicate detection and 30-day job filtering.
+A French Telegram bot that scrapes job offers different categories, then automatically posts them to specific Telegram forum topics. Features PostgreSQL database storage with automatic duplicate detection, 30-day job filtering, and separated scraping/sending architecture.
 
 ## Tech Stack
 - **Python 3.x** with modern typing
@@ -49,18 +49,12 @@ make clean
 ```bash
 # Scraping only (saves to database)
 python -m france_chomage scrape run communication
-python -m france_chomage scrape run design
-python -m france_chomage scrape run restauration
 
 # Send only (reads from database, new jobs only)
 python -m france_chomage send run communication
-python -m france_chomage send run design
-python -m france_chomage send run restauration
 
 # Complete workflow (scrape + send)
 python -m france_chomage workflow run communication
-python -m france_chomage workflow run design
-python -m france_chomage workflow run restauration
 
 # Run scheduler (automated workflows)
 python -m france_chomage scheduler
@@ -130,27 +124,6 @@ make docker-run
 docker run --env-file .env france-chomage-bot
 ```
 
-## Project Structure
-```
-france_chomage/
-├── config.py            # Centralized configuration
-├── scheduler.py         # Main scheduler
-├── cli.py               # CLI interface (legacy)
-├── cli/                 # Modular CLI structure
-│   ├── __init__.py      # Main CLI app with sub-applications
-│   ├── shared.py        # Domain validation and utilities
-│   ├── scraping.py      # Scraping commands
-│   ├── sending.py       # Telegram sending commands
-│   ├── workflow.py      # Complete workflow commands
-│   ├── database.py      # Database management commands
-│   └── utils.py         # Utility commands (info, test, etc.)
-├── models/job.py        # Job model with validation
-├── database/            # Database models & repositories
-├── scraping/            # Scrapers (communication, design, restauration)
-├── telegram/bot.py      # Telegram bot
-└── tests/               # Test files
-```
-
 ## Code Style & Conventions
 - **Line length**: 100 characters (black formatting)
 - **Type hints**: Use modern Python typing throughout
@@ -189,20 +162,3 @@ That's it! The system automatically handles scheduling, CLI integration, and val
 
 See [ADDING_CATEGORIES.md](ADDING_CATEGORIES.md) for detailed documentation.
 
-### Legacy Process (for reference only)
-The old 7-step manual process is no longer needed but still supported for existing categories.
-
-**Note**: With the new modular CLI structure, adding a new category now requires changes in only ONE place (`shared.py`) instead of multiple files!
-
-## Scheduled Jobs
-- Communication: 17:00
-- Design: 18:00
-- Restauration: 19:00
-- Automatic summary after each workflow
-
-## Testing
-- Use `pytest` for all tests
-- Tests located in `france_chomage/tests/`
-- Use `pytest-asyncio` for async tests
-- Use `pytest-mock` for mocking
-- Coverage reports available with `make test-cov`
